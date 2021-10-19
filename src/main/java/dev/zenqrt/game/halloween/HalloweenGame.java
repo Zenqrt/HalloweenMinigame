@@ -7,6 +7,7 @@ import dev.zenqrt.game.GameState;
 import dev.zenqrt.game.ending.Ending;
 import dev.zenqrt.game.halloween.maze.MazeBoard;
 import dev.zenqrt.game.halloween.maze.strategy.MazeGenerationStrategy;
+import dev.zenqrt.game.halloween.maze.themes.wall.MazeWallDecoration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,7 @@ public class HalloweenGame extends Game {
 
     }
 
-    private void generateMaze(MazeGenerationStrategy strategy) {
+    private void generateMaze(MazeGenerationStrategy strategy, MazeWallDecoration decoration) {
         var mazeBoard = new MazeBoard(64, 64);
         strategy.execute(mazeBoard);
     }

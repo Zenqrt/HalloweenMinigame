@@ -1,11 +1,13 @@
 package dev.zenqrt.game.halloween.maze;
 
+import dev.zenqrt.game.halloween.maze.themes.wall.WallDirection;
+
 public class MazeBoard {
 
     protected final int[][] board;
 
     public MazeBoard(int dimensionX, int dimensionY) {
-        this(new int[dimensionX][dimensionY]);
+        this(new int[dimensionY][dimensionX]);
     }
 
     public MazeBoard(int[][] board) {

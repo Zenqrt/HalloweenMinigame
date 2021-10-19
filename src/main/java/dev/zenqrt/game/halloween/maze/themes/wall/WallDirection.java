@@ -1,4 +1,4 @@
-package dev.zenqrt.game.halloween.maze.wall;
+package dev.zenqrt.game.halloween.maze.themes.wall;
 
 public class WallDirection {
 
