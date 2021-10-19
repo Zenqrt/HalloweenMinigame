@@ -2,6 +2,7 @@ package dev.zenqrt.game.halloween.maze.strategy;
 
 import com.extollit.linalg.immutable.Vec2d;
 import dev.zenqrt.game.halloween.maze.MazeBoard;
+import dev.zenqrt.game.halloween.maze.wall.WallDirection;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,8 +15,6 @@ public class RecursiveDivisionStrategy implements MazeGenerationStrategy {
 
     private static final int HORIZONTAL = 1;
     private static final int VERTICAL = 2;
-    private static final int S = 1;
-    private static final int E = 2;
 
     private final ThreadLocalRandom random;
 
@@ -32,14 +31,27 @@ public class RecursiveDivisionStrategy implements MazeGenerationStrategy {
      */
     @Override
     public void execute(MazeBoard board) {
-        while(true) {
-            if(!hasEmptyCells(board)) break;
+        createLine(board, 0, 0, board.getDimensionX(), board.getDimensionY(), chooseOrientation(board.getDimensionX(), board.getDimensionY()));
+    }
 
-            var randomPoint = random.nextInt(board.getDimensionY());
-            if(validatePointX(board, randomPoint)) continue;
+    public void displayMaze(MazeBoard board) {
+        var grid = board.getBoard();
 
-            var line = createVerticalLine(board, randomPoint);
-            createPassage(board, line);
+        for(int y = 0; y < grid.length; y++) {
+            var row = grid[y];
+            System.out.println("|");
+            System.out.println(" " + "_".repeat(Math.max(0, grid[0].length * 2 - 1)));
+
+            for(int x = 0; x < row.length; x++) {
+                var cell = grid[y][x];
+                var bottom = y+1 >= grid.length;
+                var south = cell == WallDirection.SOUTH || bottom;
+                var south2 = x+1 < grid[y].length && grid[y][x+1] == WallDirection.SOUTH || bottom;
+                var east = cell == WallDirection.EAST || x+1 >= grid[y].length;
+
+                System.out.println(south ? "_" : " ");
+                System.out.println(east ? "|" : south && south2 ? "_" : " ");
+            }
         }
     }
 
@@ -48,8 +60,10 @@ public class RecursiveDivisionStrategy implements MazeGenerationStrategy {
 
         var horizontal = orientation == HORIZONTAL;
 
-        var wx = x + (horizontal ? 0 : random.nextInt(width - 2));
-        var wy = y + (horizontal ? random.nextInt(height - 2) : 0);
+        var widthMath = width - 2;
+        var heightMath = height - 2;
+        var wx = x + (horizontal ? 0 : widthMath > 0 ? random.nextInt(widthMath) : 0);
+        var wy = y + (horizontal && heightMath > 0 ? random.nextInt(heightMath) : 0);
 
         var px = wx + (horizontal ? random.nextInt(width) : 0);
         var py = wy + (horizontal ? 0 : random.nextInt(height));
@@ -59,35 +73,37 @@ public class RecursiveDivisionStrategy implements MazeGenerationStrategy {
 
         var length = horizontal ? width : height;
 
-        var dir = horizontal ? S : E;
+        var dir = horizontal ? WallDirection.SOUTH : WallDirection.EAST;
 
         for(int i = 0; i < length; i++) {
-            board.
+            System.out.println("i = " + i);
+            System.out.println("wx = " + wx);
+            System.out.println("wy = " + wy);
+            System.out.println("dx = " + dx);
+            System.out.println("dy = " + dy);
+            if(wx != px || wy != py) {
+                System.out.println("SET BLOCK");
+                board.setBlock(wx, wy, dir);
+            }
+            wx += dx;
+            wy += dy;
         }
+
+        var nx = x;
+        var ny = y;
+        var w = horizontal ? width : wx-x+1;
+        var h = horizontal ? wy-y+1 : height;
+        createLine(board, nx, ny, w, h, chooseOrientation(w, h));
+
+        nx = horizontal ? x : wx+1;
+        ny = horizontal ? wy+1 : y;
+        w = horizontal ? width : x+width-wx-1;
+        h = horizontal ? y+height-1 : height;
+        createLine(board, nx, ny, w, h, chooseOrientation(w, h));
     }
 
-    private List<Vec2d> createVerticalLine(MazeBoard board, int point) {
-        var list = new ArrayList<Vec2d>();
-        for(int i = 0; i < board.getDimensionY(); i++) {
-            board.setBlock(point, i, true);
-            list.add(new Vec2d(point, i));
-        }
-        return list;
-    }
-
-    private List<Vec2d> createHorizontalLine(MazeBoard board, int point) {
-        var list = new ArrayList<Vec2d>();
-        for(int i = 0; i < board.getDimensionX(); i++) {
-            board.setBlock(i, point, true);
-            list.add(new Vec2d(i, point));
-        }
-        return list;
-    }
-
-    private void createPassage(MazeBoard board, List<Vec2d> list) {
-        var v = list.get(random.nextInt(list.size()));
-        board.setBlock((int) v.x, (int) v.y, false);
-        list.remove(v);
+    private int chooseOrientation(int width, int height) {
+        return (width < height ? HORIZONTAL : height < width ? VERTICAL :  random.nextInt(2) + 1);
     }
 
     private boolean validatePointX(MazeBoard board, int point) {

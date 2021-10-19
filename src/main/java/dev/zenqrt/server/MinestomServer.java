@@ -2,7 +2,6 @@ package dev.zenqrt.server;
 
 import co.aikar.commands.MinestomCommandManager;
 import com.github.christian162.EventAPI;
-import com.github.christian162.EventAPIOptions;
 import dev.zenqrt.world.generator.StoneFlatGenerator;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.extras.MojangAuth;
@@ -26,10 +25,7 @@ public class MinestomServer {
 
         // Event Handler
         var globalEventHandler = MinecraftServer.getGlobalEventHandler();
-        var eventAPIOptions = new EventAPIOptions();
-        eventAPIOptions.setDefaultParentNode(globalEventHandler);
-        eventAPIOptions.setRegisterInvalidChildren(false);
-        eventManager = new EventAPI(eventAPIOptions);
+        eventManager = new EventAPI(globalEventHandler);
     }
 
     public static MinestomCommandManager getCommandManager() {

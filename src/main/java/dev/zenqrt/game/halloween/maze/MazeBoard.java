@@ -2,22 +2,22 @@ package dev.zenqrt.game.halloween.maze;
 
 public class MazeBoard {
 
-    protected final boolean[][] board;
+    protected final int[][] board;
 
     public MazeBoard(int dimensionX, int dimensionY) {
-        this(new boolean[dimensionX][dimensionY]);
+        this(new int[dimensionX][dimensionY]);
     }
 
-    public MazeBoard(boolean[][] board) {
+    public MazeBoard(int[][] board) {
         this.board = board;
     }
 
-    public void setBlock(int coordinateX, int coordinateY, boolean block) {
-        board[coordinateY][coordinateX] = block;
+    public void setBlock(int coordinateX, int coordinateY, int wallDirection) {
+        board[coordinateY][coordinateX] = wallDirection;
     }
 
     public boolean hasBlock(int coordinateX, int coordinateY) {
-        return board[coordinateY][coordinateX];
+        return board[coordinateY][coordinateX] > 0;
     }
 
     public boolean isOpenCell(int coordinateX, int coordinateY) {
@@ -27,6 +27,10 @@ public class MazeBoard {
                 hasBlock(coordinateX, coordinateY + 1) ||
                 hasBlock(coordinateX, coordinateY - 1)
         );
+    }
+
+    public int[][] getBoard() {
+        return board;
     }
 
     public int getDimensionX() {
