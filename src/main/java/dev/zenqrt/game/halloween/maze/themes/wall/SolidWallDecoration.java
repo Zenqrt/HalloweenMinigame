@@ -17,7 +17,16 @@ public class SolidWallDecoration implements MazeWallDecoration {
     }
 
     @Override
-    public void createVerticalWall(Instance instance, Pos pos) {
+    public void createRightVerticalWall(Instance instance, Pos pos) {
+       createVerticalWall(instance, pos);
+    }
+
+    @Override
+    public void createLeftVerticalWall(Instance instance, Pos pos) {
+        createVerticalWall(instance, pos.add(length - width,0,0));
+    }
+
+    private void createVerticalWall(Instance instance, Pos pos) {
         for(int x = 0; x < width; x++) {
             for(int z = 0; z < length; z++) {
                 for(int y = 0; y < height; y++) {

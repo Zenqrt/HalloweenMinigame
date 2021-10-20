@@ -5,6 +5,6 @@ import net.minestom.server.instance.Instance;
 
 public interface MazeGroundDecoration {
 
-    void createGround(Instance instance, Pos pos);
+    void createGround(Instance instance, Pos pos, int length, int width);
 
 }

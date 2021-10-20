@@ -13,7 +13,11 @@ public class SolidGroundDecoration implements MazeGroundDecoration {
     }
 
     @Override
-    public void createGround(Instance instance, Pos pos) {
-
+    public void createGround(Instance instance, Pos pos, int length, int width) {
+        for(int x = 0; x < length; x++) {
+            for(int z = 0; z < width; z++) {
+                instance.setBlock(pos.add(x, 0, z), block);
+            }
+        }
     }
 }

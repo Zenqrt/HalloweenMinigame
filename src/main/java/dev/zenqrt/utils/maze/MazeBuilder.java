@@ -37,13 +37,15 @@ public class MazeBuilder {
         var groundDecoration = theme.getGroundDecoration();
         var wallDecoration = theme.getWallDecoration();
 
+        groundDecoration.createGround(instance, position.sub(0,1,0), scale*grid[0].length, scale*grid.length);
+
         for(int i = 0; i < grid[0].length; i++) {
             var pos = position.add(i*scale, 0, 0);
-            wallDecoration.createTopHorizontalWall(instance, pos);
+            wallDecoration.createBottomHorizontalWall(instance, pos);
         }
 
         for(int y = 0; y < grid.length; y++) {
-            wallDecoration.createVerticalWall(instance, position.add(0, 0, y*scale));
+            wallDecoration.createRightVerticalWall(instance, position.add(0, 0, y*scale));
 
             for(int x = 0; x < grid[y].length; x++) {
                 var cell = grid[y][x];
@@ -55,12 +57,12 @@ public class MazeBuilder {
                 var east = cell == WallDirection.EAST || x+1 >= grid[y].length;
 
                 if(south) {
-                    wallDecoration.createBottomHorizontalWall(instance, pos);
+                    wallDecoration.createTopHorizontalWall(instance, pos);
                 }
                 if(east) {
-                    wallDecoration.createVerticalWall(instance, pos);
+                    wallDecoration.createLeftVerticalWall(instance, pos);
                 } else if(south && south2) {
-                    wallDecoration.createBottomHorizontalWall(instance, pos);
+                    wallDecoration.createTopHorizontalWall(instance, pos);
                 }
 
 

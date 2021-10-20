@@ -5,7 +5,8 @@ import net.minestom.server.instance.Instance;
 
 public interface MazeWallDecoration {
 
-    void createVerticalWall(Instance instance, Pos pos);
+    void createRightVerticalWall(Instance instance, Pos pos);
+    void createLeftVerticalWall(Instance instance, Pos pos);
     void createBottomHorizontalWall(Instance instance, Pos pos);
     void createTopHorizontalWall(Instance instance, Pos pos);
 
