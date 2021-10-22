@@ -5,6 +5,8 @@ import dev.zenqrt.game.halloween.maze.themes.MazeTheme;
 import dev.zenqrt.game.halloween.maze.themes.ground.MazeGroundDecoration;
 import dev.zenqrt.game.halloween.maze.themes.wall.MazeWallDecoration;
 import dev.zenqrt.game.halloween.maze.themes.wall.WallDirection;
+import dev.zenqrt.world.collision.Boundaries;
+import net.minestom.server.collision.BoundingBox;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.Instance;
 
@@ -32,7 +34,7 @@ public class MazeBuilder {
         }
     }
 
-    public static void constructMaze(MazeBoard board, MazeTheme<? extends MazeGroundDecoration, ? extends MazeWallDecoration> theme, int scale, Instance instance, Pos position) {
+    public static Boundaries constructMaze(MazeBoard board, MazeTheme<? extends MazeGroundDecoration, ? extends MazeWallDecoration> theme, int scale, Instance instance, Pos position) {
         var grid = board.getBoard();
         var groundDecoration = theme.getGroundDecoration();
         var wallDecoration = theme.getWallDecoration();
@@ -68,6 +70,8 @@ public class MazeBuilder {
 
             }
         }
+
+        return new Boundaries(position.x(), position.y(), position.z(), position.x() + (grid[0].length * scale), 15, position.z() + (grid.length * scale));
     }
 
 }

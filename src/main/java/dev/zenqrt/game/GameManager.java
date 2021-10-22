@@ -26,4 +26,8 @@ public class GameManager {
         gamePlayers.remove(player);
     }
 
+    public GamePlayer findGamePlayer(Player player) {
+        return gamePlayers.get(player);
+    }
+
 }

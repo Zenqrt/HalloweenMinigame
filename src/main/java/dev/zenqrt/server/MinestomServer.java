@@ -3,6 +3,7 @@ package dev.zenqrt.server;
 import co.aikar.commands.MinestomCommandManager;
 import com.github.christian162.EventAPI;
 import dev.zenqrt.commands.CreateMazeCommand;
+import dev.zenqrt.game.GameManager;
 import dev.zenqrt.listeners.GameEvents;
 import dev.zenqrt.world.generator.StoneFlatGenerator;
 import net.minestom.server.MinecraftServer;
@@ -18,6 +19,7 @@ public class MinestomServer {
 
     private static MinestomCommandManager commandManager;
     private static EventAPI eventManager;
+    private static GameManager gameManager;
     private static InstanceContainer instanceContainer;
 
     public static void main(String[] args) {
@@ -45,6 +47,8 @@ public class MinestomServer {
             player.setAllowFlying(true);
         });
 
+        gameManager = new GameManager();
+
     }
 
     public static MinestomCommandManager getCommandManager() {
@@ -53,6 +57,10 @@ public class MinestomServer {
 
     public static EventAPI getEventManager() {
         return eventManager;
+    }
+
+    public static GameManager getGameManager() {
+        return gameManager;
     }
 
     public static InstanceContainer getInstanceContainer() {
