@@ -6,7 +6,10 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
+import net.minestom.server.utils.binary.BinaryWriter;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Consumer;
 
 public class ParticleEmitter {
 
@@ -26,8 +29,18 @@ public class ParticleEmitter {
         this.data = data;
     }
 
+    public ParticleEmitter(Particle particle, Vec offset, float speed, int count, boolean force, Consumer<BinaryWriter> dataWriter) {
+        this(particle, offset, speed, count, force, (byte[]) null);
+
+        if(dataWriter != null) {
+            var writer = new BinaryWriter();
+            dataWriter.accept(writer);
+            this.data = writer.toByteArray();
+        }
+    }
+
     public ParticleEmitter(Particle particle, Vec offset, float speed, int count, boolean force) {
-        this(particle, offset, speed, count, force, null);
+        this(particle, offset, speed, count, force, (byte[]) null);
     }
 
     public ParticlePacket createPacket(Point position) {
@@ -45,6 +58,8 @@ public class ParticleEmitter {
 
         if(data != null) {
             particlePacket.data = data;
+        } else {
+            particlePacket.data = new byte[0];
         }
 
         return particlePacket;

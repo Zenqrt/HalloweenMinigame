@@ -2,10 +2,13 @@ package dev.zenqrt.game;
 
 import dev.zenqrt.game.ending.Ending;
 import dev.zenqrt.server.MinestomServer;
+import dev.zenqrt.timer.GenericTaskBuilder;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventListener;
 import net.minestom.server.event.trait.PlayerEvent;
+import net.minestom.server.timer.Task;
+import net.minestom.server.timer.TaskBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,12 +20,14 @@ public abstract class Game {
     private final GameOptions gameOptions;
     private final int id;
     private final List<EventListener<? extends PlayerEvent>> listeners;
+    private final List<Task> tasks;
 
     protected GameState state;
 
     public Game(int id, GameOptions gameOptions) {
         this.id = id;
         this.listeners = new ArrayList<>();
+        this.tasks = new ArrayList<>();
         this.gameOptions = gameOptions;
         this.players = new ArrayList<>();
         this.state = GameState.WAITING;
@@ -32,6 +37,7 @@ public abstract class Game {
 
     public void endGame(Ending ending) {
         new ArrayList<>(listeners).forEach(this::removeListener);
+        new ArrayList<>(tasks).forEach(this::removeTask);
     }
 
     public <T extends PlayerEvent> EventListener<T> createListener(EventListener.Builder<T> builder) {
@@ -49,6 +55,24 @@ public abstract class Game {
     public void removeListener(EventListener<? extends PlayerEvent> listener) {
         MinecraftServer.getGlobalEventHandler().removeListener(listener);
         listeners.remove(listener);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends Task, B extends TaskBuilder> T createTask(B builder) {
+        var task = (T) builder.schedule();
+        tasks.add(task);
+        return task;
+    }
+
+    public <T extends Task, B extends GenericTaskBuilder<T, ?>> T createTask(B builder) {
+        var task = builder.schedule();
+        tasks.add(task);
+        return task;
+    }
+
+    public void removeTask(Task task) {
+        task.cancel();
+        tasks.remove(task);
     }
 
     public List<GamePlayer> getPlayers() {

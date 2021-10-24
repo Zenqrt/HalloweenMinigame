@@ -3,8 +3,11 @@ package dev.zenqrt.server;
 import co.aikar.commands.MinestomCommandManager;
 import com.github.christian162.EventAPI;
 import dev.zenqrt.commands.CreateMazeCommand;
+import dev.zenqrt.commands.GiveCommand;
+import dev.zenqrt.commands.SpawnClownCommand;
 import dev.zenqrt.game.GameManager;
-import dev.zenqrt.listeners.GameEvents;
+import dev.zenqrt.item.listeners.EntityEvents;
+import dev.zenqrt.item.listeners.PacketEvents;
 import dev.zenqrt.world.generator.StoneFlatGenerator;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
@@ -14,6 +17,10 @@ import net.minestom.server.event.player.PlayerLoginEvent;
 import net.minestom.server.extras.MojangAuth;
 import net.minestom.server.extras.optifine.OptifineSupport;
 import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
+import net.minestom.server.network.packet.client.play.ClientInteractEntityPacket;
+import net.minestom.server.network.packet.client.play.ClientKeepAlivePacket;
+import net.minestom.server.network.packet.client.play.ClientUseItemPacket;
 
 public class MinestomServer {
 
@@ -24,10 +31,10 @@ public class MinestomServer {
 
     public static void main(String[] args) {
         var server = MinecraftServer.init();
-//        MojangAuth.init();
+        MojangAuth.init();
         OptifineSupport.enable();
 
-        server.start("0.0.0.0", 25566);
+        server.start("0.0.0.0", 25565);
         MinecraftServer.setBrandName("boo");
 
         instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer();
@@ -35,6 +42,10 @@ public class MinestomServer {
 
         commandManager = new MinestomCommandManager();
         commandManager.registerCommand(new CreateMazeCommand());
+        commandManager.registerCommand(new SpawnClownCommand());
+        commandManager.registerCommand(new GiveCommand());
+
+//        MinecraftServer.getPacketListenerManager().setListener(ClientUseItemPacket.class, (packet, player) -> System.out.println("just seeing if this works packet"));
 
         // Event Handler
         var globalEventHandler = MinecraftServer.getGlobalEventHandler();
@@ -46,7 +57,8 @@ public class MinestomServer {
             player.setGameMode(GameMode.CREATIVE);
             player.setAllowFlying(true);
         });
-
+        eventManager.register(new EntityEvents());
+        // this is what i did
         gameManager = new GameManager();
 
     }
