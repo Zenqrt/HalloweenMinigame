@@ -37,6 +37,8 @@ public abstract class MinestomRunnable implements Runnable {
 
     public void cancel() {
         if (currentTask == null) return;
+
         currentTask.cancel();
+        currentTask = null;
     }
 }
