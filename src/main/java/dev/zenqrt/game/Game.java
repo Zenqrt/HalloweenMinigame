@@ -33,11 +33,22 @@ public abstract class Game {
         this.state = GameState.WAITING;
     }
 
+    public abstract void init();
     public abstract void startGame();
 
     public void endGame(Ending ending) {
         new ArrayList<>(listeners).forEach(this::removeListener);
         new ArrayList<>(tasks).forEach(this::removeTask);
+    }
+
+    public void join(GamePlayer gamePlayer) {
+        gamePlayer.setCurrentGame(this);
+        players.add(gamePlayer);
+    }
+
+    public void leave(GamePlayer gamePlayer) {
+        gamePlayer.setCurrentGame(null);
+        players.remove(gamePlayer);
     }
 
     public <T extends PlayerEvent> EventListener<T> createListener(EventListener.Builder<T> builder) {

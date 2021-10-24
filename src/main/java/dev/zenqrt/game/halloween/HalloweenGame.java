@@ -1,6 +1,7 @@
 package dev.zenqrt.game.halloween;
 
 import dev.zenqrt.entity.Candy;
+import dev.zenqrt.entity.monster.KillerClown;
 import dev.zenqrt.game.Game;
 import dev.zenqrt.game.GameOptions;
 import dev.zenqrt.game.GamePlayer;
@@ -8,7 +9,10 @@ import dev.zenqrt.game.GameState;
 import dev.zenqrt.game.ending.Ending;
 import dev.zenqrt.game.halloween.maze.MazeBoard;
 import dev.zenqrt.game.halloween.maze.strategy.MazeGenerationStrategy;
+import dev.zenqrt.game.halloween.maze.strategy.RecursiveDivisionStrategy;
+import dev.zenqrt.game.halloween.maze.themes.HedgeMazeTheme;
 import dev.zenqrt.game.halloween.maze.themes.MazeTheme;
+import dev.zenqrt.game.timers.CountdownTimerTask;
 import dev.zenqrt.scoreboard.SidebarBuilder;
 import dev.zenqrt.timer.countdown.CountdownRunnable;
 import dev.zenqrt.timer.countdown.CountdownTask;
@@ -16,32 +20,27 @@ import dev.zenqrt.timer.countdown.CountdownTaskBuilder;
 import dev.zenqrt.utils.chat.ParsedColor;
 import dev.zenqrt.utils.collection.CollectionUtils;
 import dev.zenqrt.utils.maze.MazeBuilder;
-import dev.zenqrt.utils.particle.ParticleEmitter;
 import dev.zenqrt.world.collision.Boundaries;
-import net.kyori.adventure.key.Key;
-import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.title.Title;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.coordinate.Vec;
+import net.minestom.server.entity.Player;
+import net.minestom.server.entity.fakeplayer.FakePlayerOption;
 import net.minestom.server.event.EventListener;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.instance.Instance;
-import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
-import net.minestom.server.particle.Particle;
-import net.minestom.server.particle.ParticleCreator;
 import net.minestom.server.scoreboard.Sidebar;
 import net.minestom.server.scoreboard.Team;
 import net.minestom.server.utils.time.TimeUnit;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class HalloweenGame extends Game {
@@ -73,41 +72,46 @@ public class HalloweenGame extends Game {
         this.gameTime = 130;
     }
 
-    /*
-    CLOWN CHASE
-    --------------
-    Time left: 3:10
+    @Override
+    public void init() {
+        generateMaze(new Pos(0, 42, 0), new RecursiveDivisionStrategy(), new HedgeMazeTheme(6, 4 ,5));
+    }
 
-    Qefib: 5
-    Bemptay: 4
-    legocmonster: 3
-    ...
-    Walmqrt: 2
-     */
+    /*
+        CLOWN CHASE
+        --------------
+        Time left: 3:10
+
+        Qefib: 5
+        Bemptay: 4
+        legocmonster: 3
+        ...
+        Walmqrt: 2
+         */
     @Override
     public void startGame() {
         state = GameState.IN_GAME;
 
+        var prefixColor = ParsedColor.of(TextColor.color(210, 77, 255).asHexString());
+        var valueColor = ParsedColor.of(TextColor.color(77, 255, 136).asHexString());
+
         players.forEach(player -> {
             var playerEntity = player.getPlayer();
-            playerEntity.setInstance(instance, findValidSpawn());
-
-            var prefixColor = ParsedColor.of(TextColor.color(210, 77, 255).asHexString());
-            var valueColor = ParsedColor.of(TextColor.color(77, 255, 136).asHexString());
-            createSidebar(player, prefixColor, valueColor).addViewer(playerEntity);
+            var position = findValidSpawn();
+            playerEntity.setInstance(instance, position);
+            spawnClown(playerEntity, position);
+            createGameSidebar(player, prefixColor, valueColor).addViewer(playerEntity);
         });
 
         var schedulerManager = MinecraftServer.getSchedulerManager();
         var moveListener = createListener(EventListener.builder(PlayerMoveEvent.class).filter(event -> event.getPlayer().getPosition().sameBlock(event.getNewPosition()))
                 .handler(event -> event.setCancelled(true)));
-        createTask(new CountdownTaskBuilder(schedulerManager, new CountdownRunnable(10, timer -> {
-            if(timer == 0) {
-                removeListener(moveListener);
-                gameTask = createTask(new CountdownTaskBuilder(schedulerManager, new CountdownRunnable(gameTime, this::activeGameTick)));
-            }
-            if(timer % 10 == 0 || timer <= 5) {
-                players.forEach(player -> player.getPlayer().showTitle(Title.title(Component.text("The game starts in", NamedTextColor.YELLOW), Component.text(timer + " seconds", NamedTextColor.RED))));
-            }
+
+        createTask(new CountdownTaskBuilder(schedulerManager, new CountdownTimerTask(10, Audience.audience(players),
+                prefixColor + "The game starts in <yellow>%d " + prefixColor + "seconds!", () ->
+        {
+            removeListener(moveListener);
+            gameTask = createTask(new CountdownTaskBuilder(schedulerManager, new CountdownRunnable(gameTime, this::activeGameTick)));
         })).repeat(1, TimeUnit.SECOND));
 
     }
@@ -123,12 +127,22 @@ public class HalloweenGame extends Game {
         }
     }
 
-    private Sidebar createSidebar(GamePlayer viewer, String prefixColor, String valueColor) {
-        var builder = new SidebarBuilder(MiniMessage.get().parse("<gradient:#ff6600:#ff5050><bold>HALLOWEEN"));
+    private Sidebar createLobbySidebar(GamePlayer viewer, String prefixColor, String valueColor) {
+        var builder = createSidebarBuilder();
+        builder.addLineAtStart(new SidebarBuilder.Line("game_state", MiniMessage.get().parse(prefixColor + "Waiting...")));
+        return null;
+    }
+
+    private Sidebar createGameSidebar(GamePlayer viewer, String prefixColor, String valueColor) {
+        var builder = createSidebarBuilder();
         builder.addLineAtStart(new SidebarBuilder.Line("time_left", MiniMessage.get().parse(prefixColor + "Time left: " + valueColor + gameTime + "s")));
         builder.emptyLineAtStart();
         createLeaderboard(viewer, builder);
         return builder.build();
+    }
+
+    private SidebarBuilder createSidebarBuilder() {
+        return new SidebarBuilder(MiniMessage.get().parse("<gradient:#ff6600:#ff5050><bold>CLOWN CHASE")); // idk a name
     }
 
     private void createLeaderboard(GamePlayer viewer, SidebarBuilder builder) {
@@ -159,23 +173,36 @@ public class HalloweenGame extends Game {
 
         var random = ThreadLocalRandom.current();
         var randomPos = findRandomPosition(random, boundaries);
-        while (checkSurroundingArea(randomPos)) {
+        while (checkSurroundingArea(randomPos, 2, 2, 2)) {
             randomPos = findRandomPosition(random, boundaries);
         }
 
         return randomPos;
     }
 
-    private boolean checkSurroundingArea(Pos pos) {
-        for(double x = 0; x < 2; x++) {
-            for(double z = 0; z < 4; z++) {
-                for(double y = 0; y < 2; y++) {
+    private boolean checkSurroundingArea(Pos pos, int xArea, int yArea, int zArea) {
+        for(double x = 0; x < xArea; x++) {
+            for(double z = 0; z < zArea; z++) {
+                for(double y = 0; y < yArea; y++) {
                     if(!instance.getBlock(pos.add(x,y,z)).isAir()) return false;
                 }
             }
         }
 
         return true;
+    }
+
+    @Nullable
+    private Pos findValidPositionInArea(Pos pos, int xArea, int yArea, int zArea) {
+        for(double x = 0; x < xArea; x++) {
+            for(double z = 0; z < zArea; z++) {
+                for(double y = 0; y < yArea; y++) {
+                    if(!instance.getBlock(pos.add(x,y,z)).isAir()) continue;
+                    return pos.add(x, 0, z);
+                }
+            }
+        }
+        return null;
     }
 
     private Pos findRandomPosition(ThreadLocalRandom random, Boundaries boundaries) {
@@ -186,8 +213,15 @@ public class HalloweenGame extends Game {
         );
     }
 
-    private void spawnClowns() {
+    private void spawnClown(Player player, Pos position) {
+        var randomPos = findValidPositionInArea(position, 2, 2, 2);
+        if(randomPos == null) {
+            System.out.println("uh oh");
+            return;
+        }
 
+        var clown = new KillerClown(new FakePlayerOption(), null);
+        clown.setTarget(player);
     }
 
     private void generateMaze(Pos pos, MazeGenerationStrategy strategy, MazeTheme<?,?> theme) {

@@ -16,7 +16,7 @@ public class StunBall extends PowerUpProjectile {
     private static final ParticleEmitter COLLISION_PARTICLE_EMITTER = new ParticleEmitter(Particle.FIREWORK, Vec.ZERO, 0.5f, 50, true);
 
     public StunBall(@Nullable Player shooter) {
-        super("Stun Snowball", shooter, EntityType.SNOWBALL);
+        super("Stun Ball", shooter, EntityType.SNOWBALL);
     }
 
     @Override

@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 /**
  * @see <a href="https://docs.adventure.kyori.net/minimessage.html#usage">https://docs.adventure.kyori.net/minimessage.html#usage</a>
  */
+@SuppressWarnings("unused")
 public enum ParsedColor implements ParsedChat {
     BLACK("black"),
     DARK_BLUE("dark_blue"),

@@ -1,5 +1,6 @@
 package dev.zenqrt.entity.projectile;
 
+import dev.zenqrt.utils.chat.ParsedColor;
 import dev.zenqrt.utils.particle.ParticleEmitter;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
@@ -8,6 +9,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Player;
 import net.minestom.server.potion.Potion;
+import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,10 +32,11 @@ public abstract class PowerUpProjectile extends CollidingProjectile {
     public void collide(Player player) {
         if(shooter != null) {
             if(shooter == player) return;
+            var textColor = ParsedColor.of("#cc66ff");
             var lowercaseName = displayName.toLowerCase(Locale.ENGLISH);
-            this.shooter.playSound(Sound.sound(Key.key("minecraft:entity.experience_orb.pickup"), Sound.Source.PLAYER, 1, 1));
-            this.shooter.sendMessage(MiniMessage.get().parse("<#cc66ff>You hit <aqua>" + plainTextSerializer.serialize(player.getName()) + " <#cc66ff>with your " + lowercaseName + "!"));
-            player.sendMessage(MiniMessage.get().parse("<#cc66ff>You got hit with a " + lowercaseName + " by <aqua>" + plainTextSerializer.serialize(shooter.getName()) + "<#cc66ff>!"));
+            this.shooter.playSound(Sound.sound(SoundEvent.ENTITY_EXPERIENCE_ORB_PICKUP, Sound.Source.PLAYER, 1, 1));
+            this.shooter.sendMessage(MiniMessage.get().parse(textColor + "You hit <aqua>" + plainTextSerializer.serialize(player.getName()) + textColor + "with your " + lowercaseName + "!"));
+            player.sendMessage(MiniMessage.get().parse(textColor + "You got hit with a " + lowercaseName + " by <aqua>" + plainTextSerializer.serialize(shooter.getName()) + textColor + "!"));
         }
 
         var position = player.getPosition();

@@ -9,6 +9,7 @@ import dev.zenqrt.world.collision.Boundaries;
 import net.minestom.server.collision.BoundingBox;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.batch.AbsoluteBlockBatch;
 
 public class MazeBuilder {
 
@@ -39,15 +40,17 @@ public class MazeBuilder {
         var groundDecoration = theme.getGroundDecoration();
         var wallDecoration = theme.getWallDecoration();
 
-        groundDecoration.createGround(instance, position.sub(0,1,0), scale*grid[0].length, scale*grid.length);
+        var batch = new AbsoluteBlockBatch();
+
+        groundDecoration.createGround(batch, position.sub(0,1,0), scale*grid[0].length, scale*grid.length);
 
         for(int i = 0; i < grid[0].length; i++) {
             var pos = position.add(i*scale, 0, 0);
-            wallDecoration.createBottomHorizontalWall(instance, pos);
+            wallDecoration.createBottomHorizontalWall(batch, pos);
         }
 
         for(int y = 0; y < grid.length; y++) {
-            wallDecoration.createRightVerticalWall(instance, position.add(0, 0, y*scale));
+            wallDecoration.createRightVerticalWall(batch, position.add(0, 0, y*scale));
 
             for(int x = 0; x < grid[y].length; x++) {
                 var cell = grid[y][x];
@@ -59,17 +62,17 @@ public class MazeBuilder {
                 var east = cell == WallDirection.EAST || x+1 >= grid[y].length;
 
                 if(south) {
-                    wallDecoration.createTopHorizontalWall(instance, pos);
+                    wallDecoration.createTopHorizontalWall(batch, pos);
                 }
                 if(east) {
-                    wallDecoration.createLeftVerticalWall(instance, pos);
+                    wallDecoration.createLeftVerticalWall(batch, pos);
                 } else if(south && south2) {
-                    wallDecoration.createTopHorizontalWall(instance, pos);
+                    wallDecoration.createTopHorizontalWall(batch, pos);
                 }
-
-
             }
         }
+
+        batch.apply(instance, null);
 
         return new Boundaries(position.x(), position.y(), position.z(), position.x() + (grid[0].length * scale), 15, position.z() + (grid.length * scale));
     }

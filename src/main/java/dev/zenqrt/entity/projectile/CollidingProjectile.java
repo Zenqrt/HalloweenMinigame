@@ -33,7 +33,6 @@ public abstract class CollidingProjectile extends EntityProjectile {
         super.update(time);
 
         if(this.onGround) {
-            System.out.println("ground removal");
             this.remove();
         }
     }

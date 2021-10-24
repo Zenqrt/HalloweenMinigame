@@ -1,14 +1,24 @@
 package dev.zenqrt.game;
 
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
 import net.minestom.server.entity.Player;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 
-public class GamePlayer {
+public class GamePlayer implements Audience {
 
     private final Player player;
     private Game currentGame;
 
-    private GamePlayer(Player player) {
+    @ApiStatus.Internal
+    public GamePlayer(Player player) {
         this.player = player;
+    }
+
+    @Override
+    public void sendActionBar(@NotNull Component message) {
+        player.sendActionBar(message);
     }
 
     public Player getPlayer() {
@@ -21,11 +31,6 @@ public class GamePlayer {
 
     public Game getCurrentGame() {
         return currentGame;
-    }
-
-    public static GamePlayer createGamePlayer(Player player) {
-        var gamePlayer = new GamePlayer(player);
-        return gamePlayer;
     }
 
 }

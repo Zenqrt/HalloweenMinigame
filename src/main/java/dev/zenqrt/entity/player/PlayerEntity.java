@@ -18,16 +18,6 @@ public class PlayerEntity extends FakePlayer {
 
     }
 
-    @Override
-    public void tick(long time) {
-        super.tick(time);
-        if(isDead) return;
-
-        if(target != null) {
-            this.getNavigator().setPathTo(target.getPosition(), true);
-        }
-    }
-
     public void setTarget(@Nullable Entity target) {
         this.target = target;
     }

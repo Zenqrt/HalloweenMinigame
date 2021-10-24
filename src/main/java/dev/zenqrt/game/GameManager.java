@@ -3,19 +3,20 @@ package dev.zenqrt.game;
 import dev.zenqrt.utils.Utils;
 import net.minestom.server.entity.Player;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GameManager {
 
     private final Map<Player, GamePlayer> gamePlayers;
-    private final List<Game> games;
+    private final Set<Game> games;
 
     public GameManager() {
         this.gamePlayers = new HashMap<>();
-        this.games = new ArrayList<>();
+        this.games = new HashSet<>();
+    }
+
+    public void registerGame(Game game) {
+        games.add(game);
     }
 
     public void addGamePlayer(GamePlayer gamePlayer) {
