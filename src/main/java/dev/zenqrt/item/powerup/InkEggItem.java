@@ -13,8 +13,7 @@ import net.minestom.server.item.Material;
 public class InkEggItem extends ThrowableItem {
 
     public InkEggItem() {
-        super("ink_egg",
-                ItemStack.builder(Material.EGG)
+        super("ink_egg", ItemStack.builder(Material.EGG)
                         .displayName(Component.text("Ink Egg", NamedTextColor.LIGHT_PURPLE).decoration(TextDecoration.ITALIC, false)).build(), 1.25, 0);
     }
 

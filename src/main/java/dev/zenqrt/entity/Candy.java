@@ -14,6 +14,7 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.item.metadata.PlayerHeadMeta;
 import net.minestom.server.particle.Particle;
+import net.minestom.server.sound.SoundEvent;
 
 import java.util.Objects;
 
@@ -49,7 +50,7 @@ public class Candy extends RotatingArmorStand {
         var position = player.getPosition().add(0, player.getEyeHeight(), 0);
         player.sendPacketToViewersAndSelf(consumeParticleEmitter.createPacket(position));
         player.sendPacketToViewersAndSelf(colorConsumeParticleEmitter.createPacket(position));
-        Objects.requireNonNull(player.getInstance()).playSound(Sound.sound(Key.key("minecraft:entity.player.burp"), Sound.Source.PLAYER, 1, 1.5f), Sound.Emitter.self());
+        Objects.requireNonNull(player.getInstance()).playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_BURP, Sound.Source.PLAYER, 1, 1.5f), Sound.Emitter.self());
         this.remove();
     }
 

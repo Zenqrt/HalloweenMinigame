@@ -28,6 +28,7 @@ public class GameEvents {
         event.setSpawningInstance(instanceContainer);
         player.setRespawnPoint(new Pos(0, 42, 0));
         player.setGameMode(GameMode.ADVENTURE);
+        player.setAllowFlying(true);
 
         if(gameManager.findGamePlayer(player) == null) {
             gameManager.addGamePlayer(new GamePlayer(player));

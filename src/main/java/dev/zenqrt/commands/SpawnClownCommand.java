@@ -8,18 +8,17 @@ import dev.zenqrt.game.halloween.HalloweenGame;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.fakeplayer.FakePlayerOption;
 
-import java.util.Objects;
-import java.util.UUID;
-
 @CommandAlias("spawnclown")
 public class SpawnClownCommand extends BaseCommand {
 
     @Default
     public void spawn(Player player) {
-        new KillerClown(new FakePlayerOption(), fakePlayer -> {
+        var clown = new KillerClown(new FakePlayerOption(), fakePlayer -> {
             fakePlayer.teleport(player.getPosition());
             fakePlayer.setTeam(HalloweenGame.PLAYER_TEAM);
         });
+        clown.setTarget(player);
+        clown.setAttacking(true);
         player.sendMessage("spawned clown");
     }
 

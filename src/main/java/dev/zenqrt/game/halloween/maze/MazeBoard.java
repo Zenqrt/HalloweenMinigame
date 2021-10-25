@@ -1,7 +1,5 @@
 package dev.zenqrt.game.halloween.maze;
 
-import dev.zenqrt.game.halloween.maze.themes.wall.WallDirection;
-
 public class MazeBoard {
 
     protected final int[][] board;
