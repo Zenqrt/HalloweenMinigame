@@ -6,17 +6,16 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Metadata;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.PlayerSkin;
 import net.minestom.server.entity.fakeplayer.FakePlayer;
 import net.minestom.server.entity.fakeplayer.FakePlayerOption;
 import net.minestom.server.event.EventDispatcher;
 import net.minestom.server.event.entity.EntityAttackEvent;
-import net.minestom.server.network.packet.server.play.DestroyEntitiesPacket;
-import net.minestom.server.network.packet.server.play.RespawnPacket;
-import net.minestom.server.utils.PacketUtils;
 import net.minestom.server.utils.time.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -25,6 +24,7 @@ import java.util.function.Consumer;
 public class PlayerEntity extends FakePlayer implements PlayerEntityAI {
 
     private final Set<PlayerEntityTraitGroup> traitGroups;
+    private final Set<Player> skinLoaded;
 
     private Entity target;
 
@@ -32,6 +32,7 @@ public class PlayerEntity extends FakePlayer implements PlayerEntityAI {
         super(uuid, username, option, spawnCallback);
 
         this.traitGroups = new CopyOnWriteArraySet<>();
+        this.skinLoaded = new HashSet<>();
         this.metadata.setIndex(17, Metadata.Byte((byte) 0x40));
     }
 
@@ -72,29 +73,33 @@ public class PlayerEntity extends FakePlayer implements PlayerEntityAI {
         var success = super.addViewer0(player);
         if(!success) return false;
 
-        MinecraftServer.getSchedulerManager().buildTask(() -> updateSkin(Set.of(player))).delay(1, TimeUnit.SECOND).schedule();
+        if(!skinLoaded.contains(player)) {
+            MinecraftServer.getSchedulerManager().buildTask(() -> updateSkin(Set.of(player))).delay(1, TimeUnit.SECOND).schedule();
+        }
 
         return true;
     }
 
+    @Override
+    protected boolean removeViewer0(@NotNull Player player) {
+        var success = super.removeViewer0(player);
+        if(!success) return false;
+
+        this.skinLoaded.remove(player);
+
+        return true;
+    }
+
+    @Override
+    public synchronized void setSkin(@Nullable PlayerSkin skin) {
+        super.setSkin(skin);
+        this.skinLoaded.addAll(getViewers());
+    }
+
     public synchronized void updateSkin(Set<Player> viewers) {
         if (this.instance != null) {
-            var destroyEntitiesPacket = new DestroyEntitiesPacket(this.getEntityId());
-            var removePlayerPacket = this.getRemovePlayerToList();
-            var addPlayerPacket = this.getAddPlayerToList();
-            var respawnPacket = new RespawnPacket();
-            respawnPacket.dimensionType = this.getDimensionType();
-            respawnPacket.gameMode = this.getGameMode();
-            respawnPacket.isFlat = true;
-            this.playerConnection.sendPacket(removePlayerPacket);
-            this.playerConnection.sendPacket(destroyEntitiesPacket);
-            this.playerConnection.sendPacket(respawnPacket);
-            this.playerConnection.sendPacket(addPlayerPacket);
-            PacketUtils.sendGroupedPacket(viewers, removePlayerPacket);
-            PacketUtils.sendGroupedPacket(viewers, destroyEntitiesPacket);
-            this.getViewers().forEach((player) -> this.showPlayer(player.getPlayerConnection()));
-            this.getInventory().update();
-            this.teleport(this.getPosition());
+            viewers.forEach((player) -> this.showPlayer(player.getPlayerConnection()));
+            this.skinLoaded.addAll(viewers);
         }
     }
 }
