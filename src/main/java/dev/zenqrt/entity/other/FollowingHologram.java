@@ -2,12 +2,14 @@ package dev.zenqrt.entity.other;
 
 import net.kyori.adventure.text.Component;
 import net.minestom.server.Viewable;
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.metadata.other.ArmorStandMeta;
+import net.minestom.server.instance.Instance;
 import net.minestom.server.utils.validate.Check;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,7 +19,8 @@ public class FollowingHologram implements Viewable {
     private static final float OFFSET_Y = -0.9875F;
     private static final float MARKER_OFFSET_Y = -0.40625F;
     private final FollowingEntity entity;
-    private final Vec offset;
+
+    private Vec offset;
     private Component text;
     private boolean removed;
 
@@ -31,8 +34,11 @@ public class FollowingHologram implements Viewable {
 
     public FollowingHologram(Entity entity, Component text, Vec offset, boolean autoViewable, boolean marker) {
         this.entity = new FollowingEntity(EntityType.ARMOR_STAND, entity, offset);
-        var instance = entity.getInstance();
-        var spawnPosition = entity.getPosition();
+        createArmorStand(entity.getInstance(), entity.getPosition(), autoViewable, marker);
+        this.setText(text);
+    }
+
+    private void createArmorStand(Instance instance, Point spawnPosition, boolean autoViewable, boolean marker) {
         var armorStandMeta = (ArmorStandMeta) this.entity.getEntityMeta();
         armorStandMeta.setNotifyAboutChanges(false);
         if (marker) {
@@ -52,11 +58,15 @@ public class FollowingHologram implements Viewable {
             this.entity.setInstance(instance, spawnPosition.add(offset));
         }
         this.entity.setAutoViewable(autoViewable);
-        this.setText(text);
     }
 
     public Pos getPosition() {
         return this.entity.getPosition().add(offset);
+    }
+
+    public void setOffset(Vec offset) {
+        this.offset = offset;
+        this.entity.offset = offset;
     }
 
     public Vec getOffset() {
@@ -79,7 +89,12 @@ public class FollowingHologram implements Viewable {
     }
 
     public boolean isRemoved() {
-        return this.removed;
+        if(this.removed) return true;
+        if(this.entity.getEntity().isRemoved()) {
+            remove();
+            return true;
+        }
+        return false;
     }
 
     public FollowingEntity getEntity() {

@@ -9,8 +9,8 @@ import java.util.UUID;
 
 public class FollowingEntity extends Entity {
 
-    private final Vec offset;
     private final Entity entity;
+    public Vec offset;
 
     public FollowingEntity(@NotNull EntityType entityType, @NotNull UUID uuid, Entity entity, Vec offset) {
         super(entityType, uuid);
@@ -45,5 +45,9 @@ public class FollowingEntity extends Entity {
             this.setInstance(instance, position);
         }
         teleport(position);
+    }
+
+    public Entity getEntity() {
+        return entity;
     }
 }

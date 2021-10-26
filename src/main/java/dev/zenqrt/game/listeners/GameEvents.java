@@ -26,7 +26,7 @@ public class GameEvents {
         final var player = event.getPlayer();
 
         event.setSpawningInstance(instanceContainer);
-        player.setRespawnPoint(new Pos(0, 42, 0));
+        player.setRespawnPoint(new Pos(0, 68, 0));
         player.setGameMode(GameMode.ADVENTURE);
         player.setAllowFlying(true);
 

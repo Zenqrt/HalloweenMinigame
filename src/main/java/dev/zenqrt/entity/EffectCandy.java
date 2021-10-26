@@ -41,7 +41,7 @@ public class EffectCandy extends Candy {
     public enum Effect {
         SPEED(PotionEffect.SPEED, Color.BLUE),
         REGENERATION(PotionEffect.REGENERATION, Color.PINK),
-        INVISIBILITY(PotionEffect.INVISIBILITY, Color.PURPLE);
+        INVISIBILITY(PotionEffect.INVISIBILITY, Color.YELLOW);
 
         private final Color color;
         private final PotionEffect effect;

@@ -3,6 +3,7 @@ package dev.zenqrt.entity.player;
 import dev.zenqrt.entity.ai.PlayerEntityAI;
 import dev.zenqrt.entity.ai.PlayerEntityTraitGroup;
 import net.minestom.server.entity.Entity;
+import net.minestom.server.entity.Metadata;
 import net.minestom.server.entity.fakeplayer.FakePlayer;
 import net.minestom.server.entity.fakeplayer.FakePlayerOption;
 import net.minestom.server.event.EventDispatcher;
@@ -25,6 +26,7 @@ public class PlayerEntity extends FakePlayer implements PlayerEntityAI {
         super(uuid, username, option, spawnCallback);
 
         this.traitGroups = new CopyOnWriteArraySet<>();
+        this.metadata.setIndex(17, Metadata.Byte((byte) 0x40));
     }
 
     @Override
