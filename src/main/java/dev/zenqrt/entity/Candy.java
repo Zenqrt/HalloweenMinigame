@@ -1,9 +1,8 @@
 package dev.zenqrt.entity;
 
-import dev.zenqrt.utils.EntityUtils;
+import dev.zenqrt.utils.entity.EntityUtils;
 import dev.zenqrt.utils.TextureUtils;
 import dev.zenqrt.utils.particle.ParticleEmitter;
-import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;

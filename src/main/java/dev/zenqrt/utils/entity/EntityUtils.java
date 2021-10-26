@@ -1,4 +1,4 @@
-package dev.zenqrt.utils;
+package dev.zenqrt.utils.entity;
 
 import net.minestom.server.entity.metadata.EntityMeta;
 

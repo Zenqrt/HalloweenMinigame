@@ -54,7 +54,7 @@ public class MeleeAttackTrait extends PlayerEntityTrait {
             target = this.findTarget();
         }
 
-        this.stop = target == null;
+        this.stop = target == null || target.isRemoved();
         if (!this.stop) {
             if (this.playerEntity.getDistance(target) <= this.range) {
                 if (!Cooldown.hasCooldown(time, this.lastHit, this.delay)) {
