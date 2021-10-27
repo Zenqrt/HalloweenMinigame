@@ -13,7 +13,7 @@ public abstract class ThrowableItem extends CustomItem {
     public ThrowableItem(String id, ItemStack displayItem, double power, double spread) {
         super(id, displayItem);
 
-        createPlayerListener(Player::getItemInMainHand, PlayerHandAnimationEvent.class, event -> {
+        createPlayerListener(event -> event.getPlayer().getItemInMainHand(), PlayerHandAnimationEvent.class, event -> {
             var player = event.getPlayer();
             var position = player.getPosition();
             var projectile = createProjectile(player);

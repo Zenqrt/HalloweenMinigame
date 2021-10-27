@@ -9,31 +9,30 @@ import java.util.stream.Stream;
  */
 @SuppressWarnings("unused")
 public enum ParsedColor implements ParsedChat {
+    AQUA("aqua"),
     BLACK("black"),
-    DARK_BLUE("dark_blue"),
-    DARK_GREEN("dark_green"),
+    BLUE("blue"),
+    BOLD("bold"),
     DARK_AQUA("dark_aqua"),
-    DARK_RED("dark_red"),
+    DARK_BLUE("dark_blue"),
+    DARK_GRAY("dark_gray"),
+    DARK_GREEN("dark_green"),
     DARK_PURPLE("dark_purple"),
+    DARK_RED("dark_red"),
     GOLD("gold"),
     GRAY("gray"),
-    DARK_GRAY("dark_gray"),
-    BLUE("blue"),
     GREEN("green"),
-    AQUA("aqua"),
-    RED("red"),
+    ITALIC("italic"),
     LIGHT_PURPLE("light_purple"),
-    YELLOW("yellow"),
-    WHITE("white"),
     OBFUSCATED("obfuscated"),
-    BOLD("bold"),
+    PRE("pre"),
+    RAINBOW("rainbow"),
+    RED("red"),
+    RESET("reset"),
     STRIKETHROUGH("strikethrough"),
     UNDERLINE("underline"),
-    ITALIC("italic"),
-    RESET("reset"),
-    RAINBOW("rainbow"),
-    PRE("pre")
-    ;
+    WHITE("white"),
+    YELLOW("yellow");
 
     private final String name;
 

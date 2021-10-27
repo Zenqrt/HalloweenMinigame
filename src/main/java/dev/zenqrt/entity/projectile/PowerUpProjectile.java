@@ -1,8 +1,8 @@
 package dev.zenqrt.entity.projectile;
 
+import dev.zenqrt.utils.chat.ChatUtils;
 import dev.zenqrt.utils.chat.ParsedColor;
 import dev.zenqrt.utils.particle.ParticleEmitter;
-import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -13,7 +13,6 @@ import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.math.BigInteger;
 import java.util.Locale;
 
 public abstract class PowerUpProjectile extends CollidingProjectile {
@@ -32,7 +31,7 @@ public abstract class PowerUpProjectile extends CollidingProjectile {
     public void collide(Player player) {
         if(shooter != null) {
             if(shooter == player) return;
-            var textColor = ParsedColor.of("#cc66ff");
+            var textColor = ParsedColor.of(ChatUtils.TEXT_COLOR_HEX);
             var lowercaseName = displayName.toLowerCase(Locale.ENGLISH);
             this.shooter.playSound(Sound.sound(SoundEvent.ENTITY_EXPERIENCE_ORB_PICKUP, Sound.Source.PLAYER, 1, 1));
             this.shooter.sendMessage(MiniMessage.get().parse(textColor + "You hit <aqua>" + plainTextSerializer.serialize(player.getName()) + textColor + "with your " + lowercaseName + "!"));

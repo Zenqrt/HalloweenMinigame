@@ -2,6 +2,7 @@ package dev.zenqrt.commands;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Default;
 import dev.zenqrt.entity.monster.KillerClown;
 import dev.zenqrt.game.halloween.HalloweenGame;
@@ -9,6 +10,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.entity.fakeplayer.FakePlayerOption;
 
 @CommandAlias("spawnclown")
+@CommandPermission("events.command.spawnclown")
 public class SpawnClownCommand extends BaseCommand {
 
     @Default

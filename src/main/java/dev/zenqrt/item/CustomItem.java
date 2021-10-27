@@ -1,13 +1,9 @@
 package dev.zenqrt.item;
 
-import dev.zenqrt.item.listeners.ItemEvents;
-import dev.zenqrt.server.MinestomServer;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
-import net.minestom.server.event.EventFilter;
 import net.minestom.server.event.EventListener;
-import net.minestom.server.event.EventNode;
 import net.minestom.server.event.trait.ItemEvent;
 import net.minestom.server.event.trait.PlayerEvent;
 import net.minestom.server.item.ItemStack;
@@ -46,13 +42,13 @@ public class CustomItem {
         return createItemListener(EventListener.builder(eventType).handler(function));
     }
 
-    public <T extends PlayerEvent> EventListener<T> createPlayerListener(Function<Player, ItemStack> itemStackFunction, EventListener.Builder<T> builder) {
-        var listener = builder.filter(event -> verifyItemTag(itemStackFunction.apply(event.getPlayer()))).build();
+    public <T extends PlayerEvent> EventListener<T> createPlayerListener(Function<T, ItemStack> itemStackFunction, EventListener.Builder<T> builder) {
+        var listener = builder.filter(event -> verifyItemTag(itemStackFunction.apply(event))).build();
         registerListener(listener);
         return listener;
     }
 
-    public <T extends PlayerEvent> EventListener<T> createPlayerListener(Function<Player, ItemStack> itemStackFunction, Class<T> eventType, Consumer<T> function) {
+    public <T extends PlayerEvent> EventListener<T> createPlayerListener(Function<T, ItemStack> itemStackFunction, Class<T> eventType, Consumer<T> function) {
         return createPlayerListener(itemStackFunction, EventListener.builder(eventType).handler(function));
     }
 

@@ -3,6 +3,7 @@ package dev.zenqrt.world.worlds;
 import dev.zenqrt.utils.WorldUtils;
 import dev.zenqrt.world.MinecraftWorld;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.AnvilLoader;
 import net.minestom.server.instance.IChunkLoader;
 import net.minestom.server.utils.NamespaceID;
@@ -18,6 +19,11 @@ public class HalloweenLobbyWorld implements MinecraftWorld {
 
     static {
         MinecraftServer.getDimensionTypeManager().addDimension(DIMENSION_TYPE);
+    }
+
+    @Override
+    public Pos getSpawnPosition() {
+        return Pos.ZERO.withY(68);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package dev.zenqrt.world.block;
+package dev.zenqrt.world.block.handlers;
 
 import net.minestom.server.instance.block.BlockHandler;
 import net.minestom.server.tag.Tag;
