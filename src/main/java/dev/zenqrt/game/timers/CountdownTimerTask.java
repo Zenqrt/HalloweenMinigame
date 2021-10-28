@@ -2,20 +2,30 @@ package dev.zenqrt.game.timers;
 
 import dev.zenqrt.function.Procedure;
 import dev.zenqrt.timer.countdown.CountdownRunnable;
-import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.text.minimessage.MiniMessage;
+
+import java.util.function.Consumer;
 
 public class CountdownTimerTask extends CountdownRunnable {
 
-    public CountdownTimerTask(int time, Audience audience, String messageFormat, Procedure endingFunction) {
-        super(time, timer -> {
-            if(timer == 0) {
-                endingFunction.run();
-                return;
-            }
-            if(timer % 10 == 0 || timer <= 5) {
-                audience.sendActionBar(MiniMessage.get().parse(String.format(messageFormat, timer)));
-            }
-        });
+    private final Consumer<Integer> timerFunction;
+    private final Procedure endingFunction;
+
+    public CountdownTimerTask(int time, Consumer<Integer> timerFunction, Procedure endingFunction) {
+        super(time);
+
+        this.timerFunction = timerFunction;
+        this.endingFunction = endingFunction;
+    }
+
+    @Override
+    public void beforeIncrement() {
+        if(timer % 10 == 0 || timer <= 5) {
+            timerFunction.accept(timer);
+        }
+    }
+
+    @Override
+    public void endCountdown() {
+        endingFunction.run();
     }
 }

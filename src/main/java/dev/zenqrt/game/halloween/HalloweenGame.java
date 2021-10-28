@@ -17,6 +17,7 @@ import dev.zenqrt.scoreboard.SidebarBuilder;
 import dev.zenqrt.timer.countdown.CountdownRunnable;
 import dev.zenqrt.timer.countdown.CountdownTask;
 import dev.zenqrt.timer.countdown.CountdownTaskBuilder;
+import dev.zenqrt.utils.Utils;
 import dev.zenqrt.utils.chat.ParsedColor;
 import dev.zenqrt.utils.collection.CollectionUtils;
 import dev.zenqrt.utils.maze.MazeBuilder;
@@ -27,10 +28,12 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.attribute.Attribute;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.fakeplayer.FakePlayerOption;
 import net.minestom.server.event.EventListener;
+import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
@@ -39,8 +42,11 @@ import net.minestom.server.scoreboard.Team;
 import net.minestom.server.utils.time.TimeUnit;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class HalloweenGame extends Game {
@@ -52,6 +58,8 @@ public class HalloweenGame extends Game {
 
     private final List<Candy> candies;
     private final Map<GamePlayer, Integer> candiesCollected;
+    private final Map<GamePlayer, Sidebar> sidebarDisplay;
+    private final Map<GamePlayer, KillerClown> clowns;
     private final Instance instance;
     private final int gameTime;
 
@@ -69,6 +77,8 @@ public class HalloweenGame extends Game {
         this.instance = instance;
         this.candies = new ArrayList<>();
         this.candiesCollected = new LinkedHashMap<>();
+        this.sidebarDisplay = new HashMap<>();
+        this.clowns = new HashMap<>();
         this.gameTime = 130;
     }
 
@@ -95,36 +105,100 @@ public class HalloweenGame extends Game {
         var prefixColor = ParsedColor.of(TextColor.color(210, 77, 255).asHexString());
         var valueColor = ParsedColor.of(TextColor.color(77, 255, 136).asHexString());
 
-        players.forEach(player -> {
+        getPlayers().forEach(player -> {
             var playerEntity = player.getPlayer();
             var position = findValidSpawn();
             playerEntity.setInstance(instance, position);
-            spawnClown(playerEntity, position);
-            createGameSidebar(player, prefixColor, valueColor).addViewer(playerEntity);
+            playerEntity.getAttribute(Attribute.MAX_HEALTH).setBaseValue(10);
+            spawnClown(player, position);
+            displaySidebar(player, createGameSidebar(player, prefixColor, valueColor));
         });
 
-        var schedulerManager = MinecraftServer.getSchedulerManager();
         var moveListener = createListener(EventListener.builder(PlayerMoveEvent.class).filter(event -> event.getPlayer().getPosition().sameBlock(event.getNewPosition()))
                 .handler(event -> event.setCancelled(true)));
 
-        createTask(new CountdownTaskBuilder(schedulerManager, new CountdownTimerTask(10, Audience.audience(players),
-                prefixColor + "The game starts in <yellow>%d " + prefixColor + "seconds!", () ->
-        {
+        mapTask("movement_countdown", new CountdownTimerTask(10,
+                timer -> Audience.audience(getPlayers()).sendActionBar(MiniMessage.get().parse(String.format(prefixColor + "You can move in <yellow>%d " + prefixColor + "seconds!", timer))), () -> {
             removeListener(moveListener);
-            gameTask = createTask(new CountdownTaskBuilder(schedulerManager, new CountdownRunnable(gameTime, this::activeGameTick)));
-        })).repeat(1, TimeUnit.SECOND));
+            toggleClownAttacks(true);
+            createListener(PlayerDeathEvent.class, event -> {
+                var player = getPlayer(event.getPlayer());
+                removeCandy(player, getCandy(player) / 2);
+            });
+            mapTask("game", new CountdownRunnable(gameTime) {
+                @Override
+                public void beforeIncrement() {
+                    activeGameTick(timer);
+                }
 
+                @Override
+                public void endCountdown() {
+                    endGame(null);
+                }
+            }.repeat(Duration.of(1, TimeUnit.SECOND)).schedule());
+        }).repeat(Duration.of(1, TimeUnit.SECOND)).schedule());
+    }
+
+    private void toggleClownAttacks(boolean attacking) {
+        clowns.forEach((player, clown) -> clown.setAttacking(attacking));
     }
 
     private void activeGameTick(int time) {
-        for(GamePlayer gamePlayer : players) {
+        for(GamePlayer gamePlayer : getPlayers()) {
+            var remove = new ArrayList<Candy>();
             for(Candy candy : candies) {
                 var playerEntity = gamePlayer.getPlayer();
                 if(!playerEntity.getBoundingBox().intersect(candy)) continue;
 
                 candy.consume(playerEntity);
+                remove.add(candy);
             }
+            candies.removeAll(remove);
         }
+    }
+
+    public void addCandy(GamePlayer player, int amount) {
+        candiesCollected.putIfAbsent(player, amount);
+        candiesCollected.computeIfPresent(player, (gamePlayer, integer) -> integer+=amount);
+    }
+
+    public void removeCandy(GamePlayer player, int amount) {
+        candiesCollected.computeIfPresent(player, (gamePlayer, integer) -> integer-=amount);
+    }
+
+    public int getCandy(GamePlayer player) {
+        return candiesCollected.get(player);
+    }
+
+    public Map<GamePlayer, Integer> getCandiesCollected() {
+        return candiesCollected;
+    }
+
+    public Map<GamePlayer, Integer> getSortedCandiesCollected(int limit) {
+        return CollectionUtils.sortByValue(candiesCollected, Comparator.reverseOrder()).entrySet()
+                .stream()
+                .limit(limit)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    public List<Candy> getCandies() {
+        return candies;
+    }
+
+    public void displaySidebar(GamePlayer gamePlayer, Sidebar sidebar) {
+        Utils.putOrReplace(sidebarDisplay, gamePlayer, sidebar);
+        sidebar.addViewer(gamePlayer.getPlayer());
+    }
+
+    public void updateSidebar(GamePlayer gamePlayer, String id, Component component) {
+        var sidebar = sidebarDisplay.get(gamePlayer);
+        if(sidebar == null) return;
+
+        sidebar.updateLineContent(id, component);
+    }
+
+    public void updateSidebar(String id, Component component) {
+        sidebarDisplay.forEach((gamePlayer, sidebar) -> sidebar.updateLineContent(id, component));
     }
 
     private Sidebar createLobbySidebar(GamePlayer viewer, String prefixColor, String valueColor) {
@@ -146,10 +220,7 @@ public class HalloweenGame extends Game {
     }
 
     private void createLeaderboard(GamePlayer viewer, SidebarBuilder builder) {
-        var leaderboard = CollectionUtils.sortByValue(candiesCollected, Comparator.reverseOrder()).entrySet()
-                .stream()
-                .limit(3)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        var leaderboard = getSortedCandiesCollected(3);
 
         int index = 0;
         for(var entry : leaderboard.entrySet()) {
@@ -213,7 +284,7 @@ public class HalloweenGame extends Game {
         );
     }
 
-    private void spawnClown(Player player, Pos position) {
+    private void spawnClown(GamePlayer gamePlayer, Pos position) {
         var randomPos = findValidPositionInArea(position, 2, 2, 2);
         if(randomPos == null) {
             System.out.println("uh oh");
@@ -221,7 +292,8 @@ public class HalloweenGame extends Game {
         }
 
         var clown = new KillerClown(new FakePlayerOption(), null);
-        clown.setTarget(player);
+        clown.setTarget(gamePlayer.getPlayer());
+        Utils.putOrReplace(clowns, gamePlayer, clown);
     }
 
     private void generateMaze(Pos pos, MazeGenerationStrategy strategy, MazeTheme<?,?> theme) {

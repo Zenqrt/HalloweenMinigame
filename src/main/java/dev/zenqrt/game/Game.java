@@ -1,54 +1,74 @@
 package dev.zenqrt.game;
 
 import dev.zenqrt.game.ending.Ending;
+import dev.zenqrt.game.timers.CountdownTimerTask;
 import dev.zenqrt.server.MinestomServer;
-import dev.zenqrt.timer.GenericTaskBuilder;
+import dev.zenqrt.timer.MinestomRunnable;
+import dev.zenqrt.utils.Utils;
+import dev.zenqrt.utils.chat.ChatUtils;
+import dev.zenqrt.utils.chat.ParsedColor;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.event.Event;
+import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventListener;
 import net.minestom.server.event.trait.PlayerEvent;
 import net.minestom.server.timer.Task;
-import net.minestom.server.timer.TaskBuilder;
+import net.minestom.server.utils.time.TimeUnit;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Duration;
+import java.util.*;
 import java.util.function.Consumer;
 
 public abstract class Game {
 
-    protected final List<GamePlayer> players;
+    protected final Map<Player, GamePlayer> players;
     private final GameOptions gameOptions;
     private final int id;
     private final List<EventListener<? extends PlayerEvent>> listeners;
-    private final List<Task> tasks;
+    private final Map<String, Task> tasks;
 
     protected GameState state;
 
     public Game(int id, GameOptions gameOptions) {
         this.id = id;
         this.listeners = new ArrayList<>();
-        this.tasks = new ArrayList<>();
+        this.tasks = new HashMap<>();
         this.gameOptions = gameOptions;
-        this.players = new ArrayList<>();
+        this.players = new HashMap<>();
         this.state = GameState.WAITING;
     }
 
     public abstract void init();
     public abstract void startGame();
 
+    public void startCountdown(int seconds) {
+        var color = ParsedColor.of(ChatUtils.TEXT_COLOR_HEX);
+        mapTask("countdown", new CountdownTimerTask(seconds,
+                timer -> Audience.audience(getPlayers()).sendActionBar(MiniMessage.get().parse(String.format(color + "The game will start in <yellow%d " + color + "seconds!", timer))),
+                this::startGame).repeat(Duration.of(1, TimeUnit.SECOND)).schedule());
+    }
+
     public void endGame(Ending ending) {
         new ArrayList<>(listeners).forEach(this::removeListener);
-        new ArrayList<>(tasks).forEach(this::removeTask);
+        new HashMap<>(tasks).forEach((key, task) -> {
+            task.cancel();
+            tasks.remove(key);
+        });
     }
 
     public void join(GamePlayer gamePlayer) {
         gamePlayer.setCurrentGame(this);
-        players.add(gamePlayer);
+        players.put(gamePlayer.getPlayer(), gamePlayer);
     }
 
     public void leave(GamePlayer gamePlayer) {
         gamePlayer.setCurrentGame(null);
-        players.remove(gamePlayer);
+        leave(gamePlayer.getPlayer());
+    }
+
+    public void leave(Player player) {
+        players.remove(player);
     }
 
     public <T extends PlayerEvent> EventListener<T> createListener(EventListener.Builder<T> builder) {
@@ -68,26 +88,21 @@ public abstract class Game {
         listeners.remove(listener);
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends Task, B extends TaskBuilder> T createTask(B builder) {
-        var task = (T) builder.schedule();
-        tasks.add(task);
-        return task;
+    public <T extends Task> void mapTask(String key, T task) {
+        Utils.putOrReplace(tasks, key, task);
     }
 
-    public <T extends Task, B extends GenericTaskBuilder<T, ?>> T createTask(B builder) {
-        var task = builder.schedule();
-        tasks.add(task);
-        return task;
+    public void unmapTask(String key) {
+        tasks.get(key).cancel();
+        tasks.remove(key);
     }
 
-    public void removeTask(Task task) {
-        task.cancel();
-        tasks.remove(task);
+    public GamePlayer getPlayer(Player player) {
+        return players.get(player);
     }
 
-    public List<GamePlayer> getPlayers() {
-        return players;
+    public Collection<GamePlayer> getPlayers() {
+        return players.values();
     }
 
     public GameOptions getGameOptions() {
