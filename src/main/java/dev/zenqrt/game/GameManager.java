@@ -15,7 +15,14 @@ public class GameManager {
         this.games = new HashSet<>();
     }
 
+    public Game getGame(int id) {
+        return games.stream().filter(game -> game.getId() == id)
+                .findFirst()
+                .orElse(null);
+    }
+
     public void registerGame(Game game) {
+        game.init();
         games.add(game);
     }
 

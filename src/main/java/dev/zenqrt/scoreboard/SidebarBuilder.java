@@ -1,6 +1,7 @@
 package dev.zenqrt.scoreboard;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.scoreboard.Sidebar;
 
 import java.util.LinkedList;
@@ -48,11 +49,18 @@ public class SidebarBuilder {
     }
 
     public Sidebar build() {
-        return new Sidebar(title);
+        var sidebar = new Sidebar(title);
+
+        for(int i = 0; i < lines.size(); i++) {
+            var line = lines.get(i);
+            sidebar.createLine(new Sidebar.ScoreboardLine(line.id(), line.content(), i));
+            System.out.println("Line = " + PlainTextComponentSerializer.plainText().serialize(line.content));
+        }
+
+        return sidebar;
     }
 
     public record Line(String id, Component content) {
-
     }
 
 }

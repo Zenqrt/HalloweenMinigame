@@ -19,9 +19,7 @@ public class CountdownTimerTask extends CountdownRunnable {
 
     @Override
     public void beforeIncrement() {
-        if(timer % 10 == 0 || timer <= 5) {
-            timerFunction.accept(timer);
-        }
+        timerFunction.accept(timer);
     }
 
     @Override

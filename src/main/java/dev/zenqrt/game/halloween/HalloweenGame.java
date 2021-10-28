@@ -15,25 +15,26 @@ import dev.zenqrt.game.halloween.maze.themes.MazeTheme;
 import dev.zenqrt.game.timers.CountdownTimerTask;
 import dev.zenqrt.scoreboard.SidebarBuilder;
 import dev.zenqrt.timer.countdown.CountdownRunnable;
-import dev.zenqrt.timer.countdown.CountdownTask;
-import dev.zenqrt.timer.countdown.CountdownTaskBuilder;
 import dev.zenqrt.utils.Utils;
+import dev.zenqrt.utils.chat.ChatUtils;
 import dev.zenqrt.utils.chat.ParsedColor;
 import dev.zenqrt.utils.collection.CollectionUtils;
 import dev.zenqrt.utils.maze.MazeBuilder;
 import dev.zenqrt.world.collision.Boundaries;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.attribute.Attribute;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.fakeplayer.FakePlayerOption;
 import net.minestom.server.event.EventListener;
-import net.minestom.server.event.player.PlayerDeathEvent;
+import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
@@ -45,12 +46,13 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class HalloweenGame extends Game {
 
+    private static final String PREFIX_COLOR = ParsedColor.of(TextColor.color(210, 77, 255).asHexString());
+    private static final String VALUE_COLOR = ParsedColor.of(TextColor.color(77, 255, 136).asHexString());
     public static final Team PLAYER_TEAM = MinecraftServer.getTeamManager().createBuilder("players")
             .teamColor(NamedTextColor.AQUA)
             .nameTagVisibility(TeamsPacket.NameTagVisibility.NEVER)
@@ -62,9 +64,10 @@ public class HalloweenGame extends Game {
     private final Map<GamePlayer, KillerClown> clowns;
     private final Instance instance;
     private final int gameTime;
+    private final PlainTextComponentSerializer plainText;
+    private BossBar bossBar;
 
     private Boundaries boundaries;
-    private CountdownTask gameTask;
 
     public HalloweenGame(int id, Instance instance) {
         super(id, new GameOptions.Builder()
@@ -80,6 +83,7 @@ public class HalloweenGame extends Game {
         this.sidebarDisplay = new HashMap<>();
         this.clowns = new HashMap<>();
         this.gameTime = 130;
+        this.plainText = PlainTextComponentSerializer.plainText();
     }
 
     @Override
@@ -90,45 +94,44 @@ public class HalloweenGame extends Game {
     /*
         CLOWN CHASE
         --------------
-        Time left: 3:10
-
         Qefib: 5
         Bemptay: 4
         legocmonster: 3
         ...
         Walmqrt: 2
+
+        Distance from clown: 10m
          */
     @Override
     public void startGame() {
         state = GameState.IN_GAME;
 
-        var prefixColor = ParsedColor.of(TextColor.color(210, 77, 255).asHexString());
-        var valueColor = ParsedColor.of(TextColor.color(77, 255, 136).asHexString());
+        var color = ParsedColor.of(ChatUtils.TEXT_COLOR_HEX);
+        this.bossBar = BossBar.bossBar(MiniMessage.get().parse(color + "Game ends in <aqua>" + gameTime + color + " seconds"), 1, BossBar.Color.RED, BossBar.Overlay.PROGRESS);
+        getPlayers().forEach(this::initPlayer);
 
-        getPlayers().forEach(player -> {
-            var playerEntity = player.getPlayer();
-            var position = findValidSpawn();
-            playerEntity.setInstance(instance, position);
-            playerEntity.getAttribute(Attribute.MAX_HEALTH).setBaseValue(10);
-            spawnClown(player, position);
-            displaySidebar(player, createGameSidebar(player, prefixColor, valueColor));
-        });
-
-        var moveListener = createListener(EventListener.builder(PlayerMoveEvent.class).filter(event -> event.getPlayer().getPosition().sameBlock(event.getNewPosition()))
+        var moveListener = createPlayerListener(EventListener.builder(PlayerMoveEvent.class).filter(event -> !event.getNewPosition().samePoint(event.getPlayer().getPosition()))
                 .handler(event -> event.setCancelled(true)));
 
         mapTask("movement_countdown", new CountdownTimerTask(10,
-                timer -> Audience.audience(getPlayers()).sendActionBar(MiniMessage.get().parse(String.format(prefixColor + "You can move in <yellow>%d " + prefixColor + "seconds!", timer))), () -> {
+                timer -> Audience.audience(getPlayers()).sendActionBar(MiniMessage.get().parse(String.format(PREFIX_COLOR + "You can move in <yellow>%d " + PREFIX_COLOR + "seconds!", timer))), () -> {
             removeListener(moveListener);
-            toggleClownAttacks(true);
-            createListener(PlayerDeathEvent.class, event -> {
-                var player = getPlayer(event.getPlayer());
-                removeCandy(player, getCandy(player) / 2);
-            });
-            mapTask("game", new CountdownRunnable(gameTime) {
+            createEntityListener(EventListener.builder(EntityDamageEvent.class).filter(event -> event.getEntity().getHealth() - event.getDamage() <= 0)
+                    .handler(event -> {
+                        final var player = (Player) event.getEntity();
+                        var gamePlayer = getPlayer(player);
+                        removeCandy(gamePlayer, getCandy(gamePlayer) / 2);
+                        player.setHealth(player.getMaxHealth());
+                        event.setCancelled(true);
+                    })
+            );
+            mapTask("game_timer", new CountdownRunnable(gameTime) {
+
                 @Override
                 public void beforeIncrement() {
-                    activeGameTick(timer);
+                    bossBar.name(MiniMessage.get().parse(color + "Game ends in <aqua>" + timer + color + " seconds"));
+                    bossBar.progress((float) timer / (float) gameTime);
+                    updateSidebar("distance", gamePlayer -> MiniMessage.get().parse(PREFIX_COLOR + "Distance from clown: " + VALUE_COLOR + getDistanceFromClown(gamePlayer) + "m"));
                 }
 
                 @Override
@@ -136,14 +139,37 @@ public class HalloweenGame extends Game {
                     endGame(null);
                 }
             }.repeat(Duration.of(1, TimeUnit.SECOND)).schedule());
+            mapTask("game_tick", MinecraftServer.getSchedulerManager().buildTask(this::activeGameTick)
+                    .repeat(Duration.of(1, TimeUnit.SECOND)).schedule());
         }).repeat(Duration.of(1, TimeUnit.SECOND)).schedule());
+    }
+
+    private void initPlayer(GamePlayer gamePlayer) {
+        var player = gamePlayer.getPlayer();
+        var position = respawnPlayer(player);
+        player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(10);
+
+        Utils.putOrReplace(candiesCollected, gamePlayer, 0);
+
+        spawnClown(gamePlayer, position.add(0,1,0));
+        displaySidebar(gamePlayer, createGameSidebar(gamePlayer, PREFIX_COLOR, VALUE_COLOR));
+        player.showBossBar(bossBar);
+    }
+
+    private Pos respawnPlayer(Player player) {
+        var position = findValidSpawn();
+        if(player.getInstance() == null || !player.getInstance().equals(instance)) {
+            player.setInstance(instance, position.add(0,1,0));
+        }
+
+        return position;
     }
 
     private void toggleClownAttacks(boolean attacking) {
         clowns.forEach((player, clown) -> clown.setAttacking(attacking));
     }
 
-    private void activeGameTick(int time) {
+    private void activeGameTick() {
         for(GamePlayer gamePlayer : getPlayers()) {
             var remove = new ArrayList<Candy>();
             for(Candy candy : candies) {
@@ -151,6 +177,8 @@ public class HalloweenGame extends Game {
                 if(!playerEntity.getBoundingBox().intersect(candy)) continue;
 
                 candy.consume(playerEntity);
+                addCandy(gamePlayer, 1);
+                updateLeaderboard();
                 remove.add(candy);
             }
             candies.removeAll(remove);
@@ -178,7 +206,7 @@ public class HalloweenGame extends Game {
         return CollectionUtils.sortByValue(candiesCollected, Comparator.reverseOrder()).entrySet()
                 .stream()
                 .limit(limit)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (duplicate1, duplicate2) -> duplicate1, LinkedHashMap::new));
     }
 
     public List<Candy> getCandies() {
@@ -197,19 +225,40 @@ public class HalloweenGame extends Game {
         sidebar.updateLineContent(id, component);
     }
 
+    public void updateSidebar(String id, Function<GamePlayer, Component> function) {
+        sidebarDisplay.forEach((gamePlayer, sidebar) -> sidebar.updateLineContent(id, function.apply(gamePlayer)));
+    }
+
     public void updateSidebar(String id, Component component) {
         sidebarDisplay.forEach((gamePlayer, sidebar) -> sidebar.updateLineContent(id, component));
+    }
+
+    public void updateLeaderboard(GamePlayer gamePlayer) {
+        updateSidebar("leaderboard_self", getLeaderboardFormat(gamePlayer, candiesCollected.get(gamePlayer)));
+        var sorted = getSortedCandiesCollected(3);
+        int index = 0;
+        for(var entry : sorted.entrySet()) {
+            index++;
+            updateSidebar("leaderboard_" + index, getLeaderboardFormat(entry.getKey(), entry.getValue()));
+        }
+    }
+
+    public void updateLeaderboard() {
+        sidebarDisplay.forEach(((gamePlayer, sidebar) -> updateLeaderboard(gamePlayer)));
     }
 
     private Sidebar createLobbySidebar(GamePlayer viewer, String prefixColor, String valueColor) {
         var builder = createSidebarBuilder();
         builder.addLineAtStart(new SidebarBuilder.Line("game_state", MiniMessage.get().parse(prefixColor + "Waiting...")));
+        builder.emptyLineAtStart();
+        builder.addLineAtStart(new SidebarBuilder.Line("players", MiniMessage.get().parse(prefixColor + "Players: " + valueColor + getPlayers().size())));
         return null;
     }
 
     private Sidebar createGameSidebar(GamePlayer viewer, String prefixColor, String valueColor) {
         var builder = createSidebarBuilder();
-        builder.addLineAtStart(new SidebarBuilder.Line("time_left", MiniMessage.get().parse(prefixColor + "Time left: " + valueColor + gameTime + "s")));
+
+        builder.addLineAtStart(new SidebarBuilder.Line("distance", MiniMessage.get().parse(prefixColor + "Distance from clown: " + valueColor + getDistanceFromClown(viewer) + "m")));
         builder.emptyLineAtStart();
         createLeaderboard(viewer, builder);
         return builder.build();
@@ -236,7 +285,7 @@ public class HalloweenGame extends Game {
     }
 
     private Component getLeaderboardFormat(GamePlayer gamePlayer, int candies) {
-        return MiniMessage.get().parse("<aqua>" + gamePlayer.getPlayer().getName() + "<reset>: <green>" + candies + "♧");
+        return MiniMessage.get().parse("<aqua>" + plainText.serialize(gamePlayer.getPlayer().getName()) + "<reset>: <green>" + candies + "♧");
     }
 
     private Pos findValidSpawn() {
@@ -244,11 +293,11 @@ public class HalloweenGame extends Game {
 
         var random = ThreadLocalRandom.current();
         var randomPos = findRandomPosition(random, boundaries);
-        while (checkSurroundingArea(randomPos, 2, 2, 2)) {
+        while (!checkSurroundingArea(randomPos, 2, 2, 2)) {
             randomPos = findRandomPosition(random, boundaries);
         }
 
-        return randomPos;
+        return randomPos.sub(0,1,0);
     }
 
     private boolean checkSurroundingArea(Pos pos, int xArea, int yArea, int zArea) {
@@ -265,35 +314,61 @@ public class HalloweenGame extends Game {
 
     @Nullable
     private Pos findValidPositionInArea(Pos pos, int xArea, int yArea, int zArea) {
-        for(double x = 0; x < xArea; x++) {
-            for(double z = 0; z < zArea; z++) {
-                for(double y = 0; y < yArea; y++) {
-                    if(!instance.getBlock(pos.add(x,y,z)).isAir()) continue;
-                    return pos.add(x, 0, z);
+        for(double x = -xArea; x < xArea; x++) {
+            if(x == -xArea || x == xArea - 1) {
+                for (double z = -zArea + 1; z < zArea - 1; z++) {
+                    var validPos = pos.add(x, 0, z);
+                    if(instance.getBlock(validPos).isAir()) return validPos;
                 }
             }
+
+            var validPos = pos.add(x, 0, 0);
+            if(instance.getBlock(validPos).isAir()) return validPos;
+
+            var validPos2 = pos.add(x, 0, zArea);
+            if(instance.getBlock(validPos2).isAir()) return validPos2;
         }
+
+//        for(double x = 0; x < xArea; x++) {
+//            for(double z = 0; z < zArea; z++) {
+//                for(double y = 0; y < yArea; y++) {
+//                    if(!instance.getBlock(pos.add(x,y,z)).isAir()) continue;
+//                    return pos.add(x, 0, z);
+//                }
+//            }
+//        }
         return null;
     }
 
     private Pos findRandomPosition(ThreadLocalRandom random, Boundaries boundaries) {
         return new Pos(
                 random.nextDouble(boundaries.getMinX(), boundaries.getMaxX()),
-                random.nextDouble(boundaries.getMinY(), boundaries.getMaxY()),
+                boundaries.getMinY(),
                 random.nextDouble(boundaries.getMinZ(), boundaries.getMaxZ())
         );
     }
 
     private void spawnClown(GamePlayer gamePlayer, Pos position) {
         var randomPos = findValidPositionInArea(position, 2, 2, 2);
-        if(randomPos == null) {
-            System.out.println("uh oh");
-            return;
+        if(randomPos == null) throw new NullPointerException("Can't find valid position");
+
+        var clown = new KillerClown(new FakePlayerOption(), player -> {
+            player.setInstance(instance, randomPos);
+        });
+        var player = gamePlayer.getPlayer();
+        clown.setTarget(player);
+        Utils.putOrReplace(clowns, gamePlayer, clown);
+    }
+
+    private int getDistanceFromClown(GamePlayer gamePlayer) {
+        var distance = 0;
+
+        var clown = clowns.get(gamePlayer);
+        if(clown != null) {
+            distance = (int) clown.getDistance(gamePlayer.getPlayer());
         }
 
-        var clown = new KillerClown(new FakePlayerOption(), null);
-        clown.setTarget(gamePlayer.getPlayer());
-        Utils.putOrReplace(clowns, gamePlayer, clown);
+        return distance;
     }
 
     private void generateMaze(Pos pos, MazeGenerationStrategy strategy, MazeTheme<?,?> theme) {
@@ -305,6 +380,14 @@ public class HalloweenGame extends Game {
 
     @Override
     public void endGame(Ending ending) {
+        getPlayers().forEach(player -> player.hideBossBar(bossBar));
+        for(var entry : clowns.entrySet()) {
+            entry.getValue().remove();
+            var gamePlayer = entry.getKey();
+            var player = gamePlayer.getPlayer();
+            player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20);
 
+            clowns.remove(gamePlayer);
+        }
     }
 }

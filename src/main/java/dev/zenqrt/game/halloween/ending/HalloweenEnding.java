@@ -8,6 +8,6 @@ public class HalloweenEnding implements Ending<HalloweenGame> {
     @Override
     public void execute(HalloweenGame game) {
         var sorted = game.getSortedCandiesCollected(3);
-
+        // TODO: get top 3 winners
     }
 }

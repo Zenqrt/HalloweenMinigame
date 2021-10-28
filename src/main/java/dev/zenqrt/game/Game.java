@@ -3,7 +3,6 @@ package dev.zenqrt.game;
 import dev.zenqrt.game.ending.Ending;
 import dev.zenqrt.game.timers.CountdownTimerTask;
 import dev.zenqrt.server.MinestomServer;
-import dev.zenqrt.timer.MinestomRunnable;
 import dev.zenqrt.utils.Utils;
 import dev.zenqrt.utils.chat.ChatUtils;
 import dev.zenqrt.utils.chat.ParsedColor;
@@ -12,6 +11,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.EventListener;
+import net.minestom.server.event.trait.EntityEvent;
 import net.minestom.server.event.trait.PlayerEvent;
 import net.minestom.server.timer.Task;
 import net.minestom.server.utils.time.TimeUnit;
@@ -25,7 +25,7 @@ public abstract class Game {
     protected final Map<Player, GamePlayer> players;
     private final GameOptions gameOptions;
     private final int id;
-    private final List<EventListener<? extends PlayerEvent>> listeners;
+    private final List<EventListener<? extends EntityEvent>> listeners;
     private final Map<String, Task> tasks;
 
     protected GameState state;
@@ -45,7 +45,7 @@ public abstract class Game {
     public void startCountdown(int seconds) {
         var color = ParsedColor.of(ChatUtils.TEXT_COLOR_HEX);
         mapTask("countdown", new CountdownTimerTask(seconds,
-                timer -> Audience.audience(getPlayers()).sendActionBar(MiniMessage.get().parse(String.format(color + "The game will start in <yellow%d " + color + "seconds!", timer))),
+                timer -> Audience.audience(getPlayers()).sendActionBar(MiniMessage.get().parse(String.format(color + "The game will start in <yellow>%d " + color + "seconds!", timer))),
                 this::startGame).repeat(Duration.of(1, TimeUnit.SECOND)).schedule());
     }
 
@@ -71,7 +71,7 @@ public abstract class Game {
         players.remove(player);
     }
 
-    public <T extends PlayerEvent> EventListener<T> createListener(EventListener.Builder<T> builder) {
+    public <T extends PlayerEvent> EventListener<T> createPlayerListener(EventListener.Builder<T> builder) {
         var listener = builder.filter(event -> MinestomServer.getGameManager().findGamePlayer(event.getPlayer()).getCurrentGame() == this).build();
         MinecraftServer.getGlobalEventHandler().addListener(listener);
         listeners.add(listener);
@@ -79,11 +79,23 @@ public abstract class Game {
         return listener;
     }
 
-    public <T extends PlayerEvent> EventListener<T> createListener(Class<T> eventType, Consumer<T> function) {
-        return createListener(EventListener.builder(eventType).handler(function));
+    public <T extends PlayerEvent> EventListener<T> createPlayerListener(Class<T> eventType, Consumer<T> function) {
+        return createPlayerListener(EventListener.builder(eventType).handler(function));
     }
 
-    public void removeListener(EventListener<? extends PlayerEvent> listener) {
+    public <T extends EntityEvent> EventListener<T> createEntityListener(EventListener.Builder<T> builder) {
+        var listener = builder.filter(event -> event.getEntity() instanceof Player player && MinestomServer.getGameManager().findGamePlayer(player).getCurrentGame() == this).build();
+        MinecraftServer.getGlobalEventHandler().addListener(listener);
+        listeners.add(listener);
+
+        return listener;
+    }
+
+    public <T extends EntityEvent> EventListener<T> createEntityListener(Class<T> eventType, Consumer<T> function) {
+        return createEntityListener(EventListener.builder(eventType).handler(function));
+    }
+
+    public void removeListener(EventListener<? extends EntityEvent> listener) {
         MinecraftServer.getGlobalEventHandler().removeListener(listener);
         listeners.remove(listener);
     }

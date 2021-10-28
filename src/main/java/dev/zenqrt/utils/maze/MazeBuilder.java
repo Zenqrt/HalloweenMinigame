@@ -42,7 +42,7 @@ public class MazeBuilder {
 
         var batch = new AbsoluteBlockBatch();
 
-        groundDecoration.createGround(batch, position.sub(0,1,0), scale*grid[0].length, scale*grid.length);
+        groundDecoration.createGround(batch, position.sub(0,1,0), scale*grid[0].length, scale*grid.length, 10);
 
         for(int i = 0; i < grid[0].length; i++) {
             var pos = position.add(i*scale, 0, 0);
@@ -61,6 +61,10 @@ public class MazeBuilder {
                 var south2 = x+1 < grid[y].length && grid[y][x+1] == WallDirection.SOUTH || bottom;
                 var east = cell == WallDirection.EAST || x+1 >= grid[y].length;
 
+                if(!instance.isChunkLoaded(pos)) {
+                    instance.loadChunk(pos);
+                }
+
                 if(south) {
                     wallDecoration.createTopHorizontalWall(batch, pos);
                 }
@@ -74,7 +78,7 @@ public class MazeBuilder {
 
         batch.apply(instance, null);
 
-        return new Boundaries(position.x(), position.y(), position.z(), position.x() + (grid[0].length * scale), 15, position.z() + (grid.length * scale));
+        return new Boundaries(position.x(), position.y(), position.z(), position.x() + (grid[0].length * scale), position.y(), position.z() + (grid.length * scale));
     }
 
 }

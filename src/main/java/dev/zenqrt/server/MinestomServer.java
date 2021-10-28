@@ -1,11 +1,15 @@
 package dev.zenqrt.server;
 
+import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.MinestomCommandManager;
 import com.github.christian162.EventAPI;
 import dev.zenqrt.commands.CreateMazeCommand;
+import dev.zenqrt.commands.GameCommand;
 import dev.zenqrt.commands.GiveCommand;
 import dev.zenqrt.commands.SpawnClownCommand;
 import dev.zenqrt.game.GameManager;
+import dev.zenqrt.game.GamePlayer;
+import dev.zenqrt.game.listeners.GameEvents;
 import dev.zenqrt.potion.PotionEffectManager;
 import dev.zenqrt.server.listeners.ServerEvents;
 import dev.zenqrt.world.block.handlers.SignBlockHandler;
@@ -35,15 +39,25 @@ public class MinestomServer {
         MinecraftServer.setBrandName("Event");
 
         instanceContainer = new HalloweenLobbyWorld().createInstanceContainer();
+        gameManager = new GameManager();
 
         commandManager = new MinestomCommandManager();
         var replacements = commandManager.getCommandReplacements();
         replacements.addReplacement("cmd_perm", "events.command");
+
+        var contexts = commandManager.getCommandContexts();
+        contexts.registerContext(GamePlayer.class, c -> {
+            var player = c.getPlayer();
+            var gamePlayer = gameManager.findGamePlayer(player);
+            if(gamePlayer == null) throw new InvalidCommandArgument("Could not find game player");
+            return gamePlayer;
+        });
         commandManager.registerCommand(new CreateMazeCommand());
         commandManager.registerCommand(new SpawnClownCommand());
         commandManager.registerCommand(new GiveCommand());
+        commandManager.registerCommand(new GameCommand(gameManager));
 
-        gameManager = new GameManager();
+
 
         var blockManager = MinecraftServer.getBlockManager();
         blockManager.registerHandler("minecraft:skull", SkullBlockHandler::new);
@@ -67,6 +81,7 @@ public class MinestomServer {
         var globalEventHandler = MinecraftServer.getGlobalEventHandler();
         eventManager = new EventAPI(globalEventHandler);
         eventManager.register(new ServerEvents(instanceContainer));
+        eventManager.register(new GameEvents(gameManager));
     }
 
     public static MinestomCommandManager getCommandManager() {

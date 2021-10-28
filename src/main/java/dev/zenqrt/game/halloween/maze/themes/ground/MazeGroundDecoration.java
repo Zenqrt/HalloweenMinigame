@@ -5,6 +5,6 @@ import net.minestom.server.instance.batch.AbsoluteBlockBatch;
 
 public interface MazeGroundDecoration {
 
-    void createGround(AbsoluteBlockBatch batch, Point point, int length, int width);
+    void createGround(AbsoluteBlockBatch batch, Point point, int length, int width, int depth);
 
 }

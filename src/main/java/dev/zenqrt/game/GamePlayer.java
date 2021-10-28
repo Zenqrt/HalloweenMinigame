@@ -2,6 +2,7 @@ package dev.zenqrt.game;
 
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
 import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +20,11 @@ public class GamePlayer implements Audience {
     @Override
     public void sendActionBar(@NotNull Component message) {
         player.sendActionBar(message);
+    }
+
+    @Override
+    public void showTitle(@NotNull Title title) {
+        player.showTitle(title);
     }
 
     public Player getPlayer() {
