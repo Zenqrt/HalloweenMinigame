@@ -10,6 +10,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.instance.block.BlockHandler;
 import net.minestom.server.tag.Tag;
+import net.minestom.server.utils.time.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
@@ -28,7 +29,9 @@ public interface TrapBlockHandler extends BlockHandler {
         if(!(placement instanceof PlayerPlacement playerPlacement)) return;
         var block = playerPlacement.getBlock()
                 .withTag(TRAP_OWNER_TAG, playerPlacement.getPlayer().getUuid().toString());
-        playerPlacement.getInstance().setBlock(playerPlacement.getBlockPosition(), block);
+        MinecraftServer.getSchedulerManager().buildTask(() -> playerPlacement.getInstance().setBlock(playerPlacement.getBlockPosition(), block))
+                .delay(1, TimeUnit.SERVER_TICK)
+                .schedule();
     }
 
     @Override
@@ -48,7 +51,7 @@ public interface TrapBlockHandler extends BlockHandler {
                 );
                 player.sendMessage(Component.text("You got caught in ", textColor)
                         .append(player.getName().color(NamedTextColor.AQUA))
-                        .append(Component.text("'s " + lowercaseName + " trap!"))
+                        .append(Component.text("'s " + lowercaseName + "!"))
                 );
             }
         }

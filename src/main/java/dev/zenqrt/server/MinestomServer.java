@@ -6,6 +6,7 @@ import dev.zenqrt.commands.CreateMazeCommand;
 import dev.zenqrt.commands.GiveCommand;
 import dev.zenqrt.commands.SpawnClownCommand;
 import dev.zenqrt.game.GameManager;
+import dev.zenqrt.potion.PotionEffectManager;
 import dev.zenqrt.server.listeners.ServerEvents;
 import dev.zenqrt.world.block.handlers.SignBlockHandler;
 import dev.zenqrt.world.block.handlers.SkullBlockHandler;
@@ -17,16 +18,15 @@ import net.minestom.server.extras.optifine.OptifineSupport;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.block.Block;
 
-import java.net.URISyntaxException;
-
 public class MinestomServer {
 
     private static MinestomCommandManager commandManager;
     private static EventAPI eventManager;
     private static GameManager gameManager;
     private static InstanceContainer instanceContainer;
+    private static PotionEffectManager potionEffectManager;
 
-    public static void main(String[] args) throws URISyntaxException {
+    public static void main(String[] args) {
         var server = MinecraftServer.init();
         MojangAuth.init();
         OptifineSupport.enable();
@@ -61,6 +61,7 @@ public class MinestomServer {
         blockManager.registerBlockPlacementRule(new PressurePlatePlacementRule(Block.LIGHT_WEIGHTED_PRESSURE_PLATE));
         blockManager.registerBlockPlacementRule(new PressurePlatePlacementRule(Block.HEAVY_WEIGHTED_PRESSURE_PLATE));
 
+        potionEffectManager = new PotionEffectManager();
 
         // Event Handler
         var globalEventHandler = MinecraftServer.getGlobalEventHandler();
@@ -82,5 +83,9 @@ public class MinestomServer {
 
     public static InstanceContainer getInstanceContainer() {
         return instanceContainer;
+    }
+
+    public static PotionEffectManager getPotionEffectManager() {
+        return potionEffectManager;
     }
 }

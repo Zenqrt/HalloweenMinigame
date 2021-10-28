@@ -1,5 +1,7 @@
 package dev.zenqrt.world.block.handlers;
 
+import dev.zenqrt.potion.SlownessEffectHandler;
+import dev.zenqrt.server.MinestomServer;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.entity.Player;
 import net.minestom.server.potion.Potion;
@@ -13,7 +15,7 @@ public class SlownessTrapHandler implements TrapBlockHandler {
     @Override
     public void onTrap(Touch touch) {
         if(!(touch.getTouching() instanceof Player player)) return;
-        player.addEffect(new Potion(PotionEffect.SLOWNESS, (byte) 4,  100));
+        MinestomServer.getPotionEffectManager().applyEffect(player, new Potion(PotionEffect.SLOWNESS, (byte) 4,  100), new SlownessEffectHandler(player));
     }
 
     @Override

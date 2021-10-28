@@ -17,14 +17,14 @@ public class PressurePlatePlacementRule extends BlockPlacementRule {
 
     @Override
     public @NotNull Block blockUpdate(@NotNull Instance instance, @NotNull Point point, @NotNull Block block) {
-        return this.getBlock();
+        return block;
     }
 
     @Override
     public @Nullable Block blockPlace(@NotNull Instance instance, @NotNull Block block, @NotNull BlockFace blockFace, @NotNull Point point, @NotNull Player player) {
         var direction = blockFace.toDirection();
-        var belowBlock = instance.getBlock(point.sub(direction.normalX(), direction.normalY(), direction.normalZ()));
-        System.out.println("issolid? = " + belowBlock.isSolid());
-        return belowBlock.isSolid() ? block : null;
+        var offsetPoint = point.add(direction.normalX(), direction.normalY() - 1, direction.normalZ());
+        var belowBlock = instance.getBlock(offsetPoint);
+        return belowBlock.registry().isSolid() ? block : null;
     }
 }
