@@ -26,18 +26,25 @@ import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.kyori.adventure.title.Title;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.attribute.Attribute;
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.fakeplayer.FakePlayerOption;
+import net.minestom.server.event.EventFilter;
 import net.minestom.server.event.EventListener;
+import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
+import net.minestom.server.potion.Potion;
+import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.scoreboard.Sidebar;
 import net.minestom.server.scoreboard.Team;
 import net.minestom.server.utils.time.TimeUnit;
@@ -59,6 +66,7 @@ public class HalloweenGame extends Game {
             .build();
 
     private final List<Candy> candies;
+    private final List<Player> respawning;
     private final Map<GamePlayer, Integer> candiesCollected;
     private final Map<GamePlayer, Sidebar> sidebarDisplay;
     private final Map<GamePlayer, KillerClown> clowns;
@@ -79,6 +87,7 @@ public class HalloweenGame extends Game {
 
         this.instance = instance;
         this.candies = new ArrayList<>();
+        this.respawning = new ArrayList<>();
         this.candiesCollected = new LinkedHashMap<>();
         this.sidebarDisplay = new HashMap<>();
         this.clowns = new HashMap<>();
@@ -107,7 +116,7 @@ public class HalloweenGame extends Game {
         state = GameState.IN_GAME;
 
         var color = ParsedColor.of(ChatUtils.TEXT_COLOR_HEX);
-        this.bossBar = BossBar.bossBar(MiniMessage.get().parse(color + "Game ends in <aqua>" + gameTime + color + " seconds"), 1, BossBar.Color.RED, BossBar.Overlay.PROGRESS);
+        this.bossBar = BossBar.bossBar(MiniMessage.get().parse(color + "Time left: <aqua>" + gameTime + color + "s"), 1, BossBar.Color.RED, BossBar.Overlay.PROGRESS);
         getPlayers().forEach(this::initPlayer);
 
         var moveListener = createPlayerListener(EventListener.builder(PlayerMoveEvent.class).filter(event -> !event.getNewPosition().samePoint(event.getPlayer().getPosition()))
@@ -116,20 +125,48 @@ public class HalloweenGame extends Game {
         mapTask("movement_countdown", new CountdownTimerTask(10,
                 timer -> Audience.audience(getPlayers()).sendActionBar(MiniMessage.get().parse(String.format(PREFIX_COLOR + "You can move in <yellow>%d " + PREFIX_COLOR + "seconds!", timer))), () -> {
             removeListener(moveListener);
-            createEntityListener(EventListener.builder(EntityDamageEvent.class).filter(event -> event.getEntity().getHealth() - event.getDamage() <= 0)
+            createEntityListener(EventListener.builder(EntityDamageEvent.class)
                     .handler(event -> {
                         final var player = (Player) event.getEntity();
-                        var gamePlayer = getPlayer(player);
-                        removeCandy(gamePlayer, getCandy(gamePlayer) / 2);
-                        player.setHealth(player.getMaxHealth());
-                        event.setCancelled(true);
+
+                        if(respawning.contains(player)) {
+                            event.setCancelled(true);
+                            return;
+                        }
+
+                        if(event.getEntity().getHealth() - event.getDamage() <= 0) {
+                            var gamePlayer = getPlayer(player);
+                            var clown = clowns.get(gamePlayer);
+                            respawning.add(player);
+                            clown.setAttacking(false);
+                            removeCandy(gamePlayer, getCandy(gamePlayer) / 2);
+                            player.setHealth(player.getMaxHealth());
+                            player.addEffect(new Potion(PotionEffect.BLINDNESS, (byte) 1, 100));
+                            event.setCancelled(true);
+                            player.showTitle(Title.title(Component.text("YOU DIED!", NamedTextColor.RED).decorate(TextDecoration.BOLD), Component.empty()));
+                            new CountdownRunnable(5) {
+                                @Override
+                                public void beforeIncrement() {
+                                    player.sendActionBar(MiniMessage.get().parse(PREFIX_COLOR + "Respawning in <yellow>%d " + PREFIX_COLOR + "seconds..."));
+                                }
+
+                                @Override
+                                public void endCountdown() {
+                                    respawning.remove(player);
+                                    respawnPlayer(player, findValidSpawn());
+                                    clown.setAttacking(true);
+                                    player.removeEffect(PotionEffect.BLINDNESS);
+                                }
+                            }.repeat(Duration.of(1, TimeUnit.SECOND)).schedule();
+                        }
                     })
             );
+            toggleClownAttacks(true);
             mapTask("game_timer", new CountdownRunnable(gameTime) {
 
                 @Override
                 public void beforeIncrement() {
-                    bossBar.name(MiniMessage.get().parse(color + "Game ends in <aqua>" + timer + color + " seconds"));
+                    bossBar.name(MiniMessage.get().parse(color + "Time left: <aqua>" + timer + color + "s"));
                     bossBar.progress((float) timer / (float) gameTime);
                     updateSidebar("distance", gamePlayer -> MiniMessage.get().parse(PREFIX_COLOR + "Distance from clown: " + VALUE_COLOR + getDistanceFromClown(gamePlayer) + "m"));
                 }
@@ -139,6 +176,7 @@ public class HalloweenGame extends Game {
                     endGame(null);
                 }
             }.repeat(Duration.of(1, TimeUnit.SECOND)).schedule());
+
             mapTask("game_tick", MinecraftServer.getSchedulerManager().buildTask(this::activeGameTick)
                     .repeat(Duration.of(1, TimeUnit.SECOND)).schedule());
         }).repeat(Duration.of(1, TimeUnit.SECOND)).schedule());
@@ -146,7 +184,8 @@ public class HalloweenGame extends Game {
 
     private void initPlayer(GamePlayer gamePlayer) {
         var player = gamePlayer.getPlayer();
-        var position = respawnPlayer(player);
+        var position = findValidSpawn();
+        respawnPlayer(player, position);
         player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(10);
 
         Utils.putOrReplace(candiesCollected, gamePlayer, 0);
@@ -156,13 +195,13 @@ public class HalloweenGame extends Game {
         player.showBossBar(bossBar);
     }
 
-    private Pos respawnPlayer(Player player) {
-        var position = findValidSpawn();
+    private void respawnPlayer(Player player, Point position) {
+        var pos = position.add(0,1,0);
         if(player.getInstance() == null || !player.getInstance().equals(instance)) {
-            player.setInstance(instance, position.add(0,1,0));
+            player.setInstance(instance, pos);
+        } else {
+            player.teleport(Pos.fromPoint(pos));
         }
-
-        return position;
     }
 
     private void toggleClownAttacks(boolean attacking) {

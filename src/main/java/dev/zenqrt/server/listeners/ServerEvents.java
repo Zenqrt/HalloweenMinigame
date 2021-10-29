@@ -34,7 +34,7 @@ public class ServerEvents {
 
         event.setSpawningInstance(instanceContainer);
         player.setRespawnPoint(WorldUtils.getInstanceSpawnpoint(instanceContainer));
-        player.setGameMode(GameMode.CREATIVE);
+        player.setGameMode(GameMode.ADVENTURE);
         player.setAllowFlying(true);
         player.setUuid(Objects.requireNonNullElse(MojangService.retrieveUuid(player.getUsername()), UUID.randomUUID()));
 
