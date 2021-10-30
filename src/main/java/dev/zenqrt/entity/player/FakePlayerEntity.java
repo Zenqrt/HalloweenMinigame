@@ -11,19 +11,19 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public class FakePlayerAccess extends FakePlayer {
+public class FakePlayerEntity extends FakePlayer {
 
-    public FakePlayerAccess(@NotNull UUID uuid, @NotNull String username, @NotNull FakePlayerOption option, @Nullable Consumer<FakePlayer> spawnCallback) {
+    public FakePlayerEntity(@NotNull UUID uuid, @NotNull String username, @NotNull FakePlayerOption option, @Nullable Consumer<FakePlayer> spawnCallback) {
         super(uuid, username, option, spawnCallback);
     }
 
+    @SuppressWarnings("all")
     @Override
     public void spawn() {
         var navigator = this.getNavigator();
         var hydrazinePathFinder = new HydrazinePathFinder(navigator.getPathingEntity(), this.getInstance().getInstanceSpace());
         hydrazinePathFinder.schedulingPriority(SchedulingPriority.extreme);
         navigator.setPathFinder(hydrazinePathFinder);
-
     }
 
     public void enableSkinLayers() {

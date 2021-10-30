@@ -2,7 +2,7 @@ package dev.zenqrt.game.halloween;
 
 import dev.zenqrt.entity.Candy;
 import dev.zenqrt.entity.monster.KillerClown;
-import dev.zenqrt.entity.player.FakePlayerAccess;
+import dev.zenqrt.entity.player.FakePlayerEntity;
 import dev.zenqrt.game.Game;
 import dev.zenqrt.game.GameOptions;
 import dev.zenqrt.game.GamePlayer;
@@ -39,17 +39,11 @@ import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
-import net.minestom.server.entity.fakeplayer.FakePlayer;
 import net.minestom.server.entity.fakeplayer.FakePlayerOption;
-import net.minestom.server.event.EventFilter;
 import net.minestom.server.event.EventListener;
-import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.instance.Instance;
-import net.minestom.server.network.packet.client.play.ClientAnimationPacket;
-import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
-import net.minestom.server.network.packet.server.play.EntityAnimationPacket;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
@@ -158,7 +152,7 @@ public class HalloweenGame extends Game {
                             player.playSound(Sound.sound(SoundEvent.ENTITY_ZOMBIE_DEATH, Sound.Source.PLAYER, 1, 0));
 
 
-                            var deadBody = new FakePlayerAccess(UUID.randomUUID(), "", new FakePlayerOption(), fakePlayer -> {
+                            var deadBody = new FakePlayerEntity(UUID.randomUUID(), "", new FakePlayerOption(), fakePlayer -> {
                                 fakePlayer.setInstance(Objects.requireNonNull(player.getInstance()), player.getPosition());
                                 fakePlayer.setSkin(player.getSkin());
                                 fakePlayer.setPose(Entity.Pose.SLEEPING);
@@ -414,9 +408,7 @@ public class HalloweenGame extends Game {
         var randomPos = findValidPositionInArea(position, 2, 2, 2);
         if(randomPos == null) throw new NullPointerException("Can't find valid position");
 
-        var clown = new KillerClown(new FakePlayerOption(), player -> {
-            player.setInstance(instance, randomPos);
-        });
+        var clown = new KillerClown(new FakePlayerOption(), player -> player.setInstance(instance, randomPos));
         var player = gamePlayer.getPlayer();
         clown.setTarget(player);
         Utils.putOrReplace(clowns, gamePlayer, clown);

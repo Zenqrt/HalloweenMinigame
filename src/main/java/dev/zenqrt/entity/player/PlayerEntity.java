@@ -4,7 +4,6 @@ import dev.zenqrt.entity.ai.PlayerEntityAI;
 import dev.zenqrt.entity.ai.PlayerEntityTraitGroup;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Entity;
-import net.minestom.server.entity.Metadata;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.PlayerSkin;
 import net.minestom.server.entity.fakeplayer.FakePlayer;
@@ -21,7 +20,7 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 
-public class PlayerEntity extends FakePlayerAccess implements PlayerEntityAI {
+public class PlayerEntity extends FakePlayerEntity implements PlayerEntityAI {
 
     private final Set<PlayerEntityTraitGroup> traitGroups;
     private final Set<Player> skinLoaded;

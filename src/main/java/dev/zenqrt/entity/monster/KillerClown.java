@@ -31,6 +31,7 @@ public class KillerClown extends PlayerEntity implements HologramTag {
     private FollowingHologram hologramTag;
     private boolean attacking;
 
+    @SuppressWarnings("all")
     public KillerClown(@NotNull FakePlayerOption option, @Nullable Consumer<FakePlayer> spawnCallback) {
         super(UUID.randomUUID(), "murder_clown", option, spawnCallback);
         this.getNavigator().getPathingEntity().setSearchRange(100);
@@ -53,6 +54,7 @@ public class KillerClown extends PlayerEntity implements HologramTag {
     @Override
     public void spawn() {
         super.spawn();
+        System.out.println("Has instance null: " + (this.getInstance() == null));
         this.hologramTag = new FollowingHologram(this, Component.text("Your Clown", TextColor.color(0, 255, 153)).decorate(TextDecoration.BOLD), Vec.ZERO.withY(this.getEyeHeight() - 0.5));
     }
 

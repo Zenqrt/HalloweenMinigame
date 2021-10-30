@@ -70,10 +70,8 @@ public class MeleeAttackTrait extends PlayerEntityTrait {
                 var pathPosition = navigator.getPathPosition();
                 var targetPosition = target.getPosition();
                 if ((pathPosition == null || !pathPosition.samePoint(targetPosition)) && this.cooldown.isReady(time)) {
-                    System.out.println("Update path: " + navigator.getPathingEntity().searchRange());
                     this.cooldown.refreshLastUpdate(time);
-                    var success = navigator.setPathTo(targetPosition, true);
-                    System.out.println("success = " + success);
+                    navigator.setPathTo(targetPosition, true);
                 }
             }
         }

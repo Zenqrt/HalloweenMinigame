@@ -34,19 +34,19 @@ public class FollowingHologram implements Viewable {
 
     public FollowingHologram(Entity entity, Component text, Vec offset, boolean autoViewable, boolean marker) {
         this.entity = new FollowingEntity(EntityType.ARMOR_STAND, entity, offset);
+        System.out.println("ENTITY INSTANCE NULL " + (entity.getInstance() == null));
         createArmorStand(entity.getInstance(), entity.getPosition(), autoViewable, marker);
         this.setText(text);
     }
 
     private void createArmorStand(Instance instance, Point spawnPosition, boolean autoViewable, boolean marker) {
-        System.out.println("Creating...");
         var armorStandMeta = (ArmorStandMeta) this.entity.getEntityMeta();
         armorStandMeta.setNotifyAboutChanges(false);
         if (marker) {
-            this.offset = offset.add(0, MARKER_OFFSET_Y, 0);
+            this.offset = entity.offset.add(0, MARKER_OFFSET_Y, 0);
             armorStandMeta.setMarker(true);
         } else {
-            this.offset = offset.add(0, OFFSET_Y, 0);
+            this.offset = entity.offset.add(0, OFFSET_Y, 0);
             armorStandMeta.setSmall(true);
         }
 
@@ -55,9 +55,9 @@ public class FollowingHologram implements Viewable {
         armorStandMeta.setCustomNameVisible(true);
         armorStandMeta.setInvisible(true);
         armorStandMeta.setNotifyAboutChanges(true);
+
         if(instance != null) {
             this.entity.setInstance(instance, spawnPosition.add(offset));
-            System.out.println("SPawn IT");
         }
         this.entity.setAutoViewable(autoViewable);
     }
