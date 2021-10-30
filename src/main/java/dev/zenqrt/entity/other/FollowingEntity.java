@@ -27,16 +27,23 @@ public class FollowingEntity extends Entity {
     }
 
     @Override
+    public void tick(long time) {
+        var instance = entity.getInstance();
+        if(instance != null) {
+            if(this.instance == null) {
+                this.setInstance(instance, position);
+            }
+        }
+        
+        super.tick(time);
+    }
+
+    @Override
     public void update(long time) {
         super.update(time);
 
         if(entity == null || entity.isRemoved()) {
             this.remove();
-            return;
-        }
-
-        var instance = entity.getInstance();
-        if(instance == null) {
             return;
         }
 

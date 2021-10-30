@@ -21,7 +21,7 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 
-public class PlayerEntity extends FakePlayer implements PlayerEntityAI {
+public class PlayerEntity extends FakePlayerAccess implements PlayerEntityAI {
 
     private final Set<PlayerEntityTraitGroup> traitGroups;
     private final Set<Player> skinLoaded;
@@ -33,7 +33,6 @@ public class PlayerEntity extends FakePlayer implements PlayerEntityAI {
 
         this.traitGroups = new CopyOnWriteArraySet<>();
         this.skinLoaded = new HashSet<>();
-        this.metadata.setIndex(17, Metadata.Byte((byte) 0x40));
     }
 
     @Override

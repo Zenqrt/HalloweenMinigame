@@ -33,6 +33,7 @@ public class KillerClown extends PlayerEntity implements HologramTag {
 
     public KillerClown(@NotNull FakePlayerOption option, @Nullable Consumer<FakePlayer> spawnCallback) {
         super(UUID.randomUUID(), "murder_clown", option, spawnCallback);
+        this.getNavigator().getPathingEntity().setSearchRange(100);
         this.addTraitGroup(
                 new PlayerEntityTraitGroupBuilder()
                 .addTrait(new ClownMeleeAttackTrait(1, 1, TimeUnit.SECOND))
@@ -45,10 +46,13 @@ public class KillerClown extends PlayerEntity implements HologramTag {
         this.setItemInMainHand(ItemStack.of(Material.IRON_AXE));
         this.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.3f);
         this.attacking = false;
+        enableSkinLayers();
+        this.setGlowing(true);
     }
 
     @Override
     public void spawn() {
+        super.spawn();
         this.hologramTag = new FollowingHologram(this, Component.text("Your Clown", TextColor.color(0, 255, 153)).decorate(TextDecoration.BOLD), Vec.ZERO.withY(this.getEyeHeight() - 0.5));
     }
 
@@ -85,6 +89,11 @@ public class KillerClown extends PlayerEntity implements HologramTag {
         @Override
         public boolean shouldStart() {
             return KillerClown.this.attacking && super.shouldStart();
+        }
+
+        @Override
+        public boolean shouldEnd() {
+            return !KillerClown.this.attacking || super.shouldEnd();
         }
 
         @Override

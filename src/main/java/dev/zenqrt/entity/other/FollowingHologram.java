@@ -39,6 +39,7 @@ public class FollowingHologram implements Viewable {
     }
 
     private void createArmorStand(Instance instance, Point spawnPosition, boolean autoViewable, boolean marker) {
+        System.out.println("Creating...");
         var armorStandMeta = (ArmorStandMeta) this.entity.getEntityMeta();
         armorStandMeta.setNotifyAboutChanges(false);
         if (marker) {
@@ -56,6 +57,7 @@ public class FollowingHologram implements Viewable {
         armorStandMeta.setNotifyAboutChanges(true);
         if(instance != null) {
             this.entity.setInstance(instance, spawnPosition.add(offset));
+            System.out.println("SPawn IT");
         }
         this.entity.setAutoViewable(autoViewable);
     }

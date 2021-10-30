@@ -8,6 +8,8 @@ import dev.zenqrt.utils.WorldUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minestom.server.entity.GameMode;
+import net.minestom.server.entity.fakeplayer.FakePlayer;
+import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerLoginEvent;
 import net.minestom.server.event.trait.PlayerEvent;
 import net.minestom.server.instance.InstanceContainer;
@@ -34,13 +36,24 @@ public class ServerEvents {
 
         event.setSpawningInstance(instanceContainer);
         player.setRespawnPoint(WorldUtils.getInstanceSpawnpoint(instanceContainer));
-        player.setGameMode(GameMode.ADVENTURE);
+        player.setGameMode(GameMode.CREATIVE);
         player.setAllowFlying(true);
-        player.setUuid(Objects.requireNonNullElse(MojangService.retrieveUuid(player.getUsername()), UUID.randomUUID()));
+
+        if(!(player instanceof FakePlayer)) {
+            player.setUuid(Objects.requireNonNullElse(MojangService.retrieveUuid(player.getUsername()), UUID.randomUUID()));
+        }
 
         if(plainText.serialize(player.getName()).equals("Walmqrt")) {
             player.addPermission(new Permission("events.command.spawnclown"));
             System.out.println("has: " + player.hasPermission("events.command.spawnclown"));
+        }
+    }
+
+    @Listen
+    public void onPlayerBlockBreak(PlayerBlockBreakEvent event) {
+        var player = event.getPlayer();
+        if(player.getGameMode() != GameMode.CREATIVE) {
+            event.setCancelled(true);
         }
     }
 

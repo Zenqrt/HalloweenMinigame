@@ -14,13 +14,13 @@ import java.util.function.Consumer;
 public class ParticleEmitter {
 
     private Particle particle;
-    private Vec offset;
+    private Point offset;
     private float speed;
     private int count;
     private boolean force;
     private byte[] data;
 
-    public ParticleEmitter(Particle particle, Vec offset, float speed, int count, boolean force, byte[] data) {
+    public ParticleEmitter(Particle particle, Point offset, float speed, int count, boolean force, byte[] data) {
         this.particle = particle;
         this.offset = offset;
         this.speed = speed;
@@ -29,7 +29,7 @@ public class ParticleEmitter {
         this.data = data;
     }
 
-    public ParticleEmitter(Particle particle, Vec offset, float speed, int count, boolean force, Consumer<BinaryWriter> dataWriter) {
+    public ParticleEmitter(Particle particle, Point offset, float speed, int count, boolean force, Consumer<BinaryWriter> dataWriter) {
         this(particle, offset, speed, count, force, (byte[]) null);
 
         if(dataWriter != null) {
@@ -39,7 +39,7 @@ public class ParticleEmitter {
         }
     }
 
-    public ParticleEmitter(Particle particle, Vec offset, float speed, int count, boolean force) {
+    public ParticleEmitter(Particle particle, Point offset, float speed, int count, boolean force) {
         this(particle, offset, speed, count, force, (byte[]) null);
     }
 

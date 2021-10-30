@@ -2,11 +2,13 @@ package dev.zenqrt.game.halloween;
 
 import dev.zenqrt.entity.Candy;
 import dev.zenqrt.entity.monster.KillerClown;
+import dev.zenqrt.entity.player.FakePlayerAccess;
 import dev.zenqrt.game.Game;
 import dev.zenqrt.game.GameOptions;
 import dev.zenqrt.game.GamePlayer;
 import dev.zenqrt.game.GameState;
 import dev.zenqrt.game.ending.Ending;
+import dev.zenqrt.game.halloween.ending.HalloweenEnding;
 import dev.zenqrt.game.halloween.maze.MazeBoard;
 import dev.zenqrt.game.halloween.maze.strategy.MazeGenerationStrategy;
 import dev.zenqrt.game.halloween.maze.strategy.RecursiveDivisionStrategy;
@@ -23,6 +25,7 @@ import dev.zenqrt.utils.maze.MazeBuilder;
 import dev.zenqrt.world.collision.Boundaries;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -34,7 +37,9 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.attribute.Attribute;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.fakeplayer.FakePlayer;
 import net.minestom.server.entity.fakeplayer.FakePlayerOption;
 import net.minestom.server.event.EventFilter;
 import net.minestom.server.event.EventListener;
@@ -42,11 +47,15 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.network.packet.client.play.ClientAnimationPacket;
+import net.minestom.server.network.packet.client.play.ClientEntityActionPacket;
+import net.minestom.server.network.packet.server.play.EntityAnimationPacket;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.scoreboard.Sidebar;
 import net.minestom.server.scoreboard.Team;
+import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.utils.time.TimeUnit;
 import org.jetbrains.annotations.Nullable;
 
@@ -73,6 +82,7 @@ public class HalloweenGame extends Game {
     private final Instance instance;
     private final int gameTime;
     private final PlainTextComponentSerializer plainText;
+    private final HalloweenEnding ending;
     private BossBar bossBar;
 
     private Boundaries boundaries;
@@ -93,6 +103,7 @@ public class HalloweenGame extends Game {
         this.clowns = new HashMap<>();
         this.gameTime = 130;
         this.plainText = PlainTextComponentSerializer.plainText();
+        this.ending = new HalloweenEnding();
     }
 
     @Override
@@ -137,17 +148,27 @@ public class HalloweenGame extends Game {
                         if(event.getEntity().getHealth() - event.getDamage() <= 0) {
                             var gamePlayer = getPlayer(player);
                             var clown = clowns.get(gamePlayer);
+                            event.setCancelled(true);
                             respawning.add(player);
                             clown.setAttacking(false);
                             removeCandy(gamePlayer, getCandy(gamePlayer) / 2);
                             player.setHealth(player.getMaxHealth());
                             player.addEffect(new Potion(PotionEffect.BLINDNESS, (byte) 1, 100));
-                            event.setCancelled(true);
                             player.showTitle(Title.title(Component.text("YOU DIED!", NamedTextColor.RED).decorate(TextDecoration.BOLD), Component.empty()));
+                            player.playSound(Sound.sound(SoundEvent.ENTITY_ZOMBIE_DEATH, Sound.Source.PLAYER, 1, 0));
+
+
+                            var deadBody = new FakePlayerAccess(UUID.randomUUID(), "", new FakePlayerOption(), fakePlayer -> {
+                                fakePlayer.setInstance(Objects.requireNonNull(player.getInstance()), player.getPosition());
+                                fakePlayer.setSkin(player.getSkin());
+                                fakePlayer.setPose(Entity.Pose.SLEEPING);
+                            });
+                            deadBody.enableSkinLayers();
+
                             new CountdownRunnable(5) {
                                 @Override
                                 public void beforeIncrement() {
-                                    player.sendActionBar(MiniMessage.get().parse(PREFIX_COLOR + "Respawning in <yellow>%d " + PREFIX_COLOR + "seconds..."));
+                                    player.sendActionBar(MiniMessage.get().parse(String.format(PREFIX_COLOR + "Respawning in <yellow>%d " + PREFIX_COLOR + "seconds...", timer)));
                                 }
 
                                 @Override
@@ -156,6 +177,7 @@ public class HalloweenGame extends Game {
                                     respawnPlayer(player, findValidSpawn());
                                     clown.setAttacking(true);
                                     player.removeEffect(PotionEffect.BLINDNESS);
+                                    player.showTitle(Title.title(Component.text("RESPAWNED!", NamedTextColor.LIGHT_PURPLE).decorate(TextDecoration.BOLD), Component.empty()));
                                 }
                             }.repeat(Duration.of(1, TimeUnit.SECOND)).schedule();
                         }
@@ -187,6 +209,7 @@ public class HalloweenGame extends Game {
         var position = findValidSpawn();
         respawnPlayer(player, position);
         player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(10);
+        player.setHealth(10);
 
         Utils.putOrReplace(candiesCollected, gamePlayer, 0);
 
@@ -291,15 +314,15 @@ public class HalloweenGame extends Game {
         builder.addLineAtStart(new SidebarBuilder.Line("game_state", MiniMessage.get().parse(prefixColor + "Waiting...")));
         builder.emptyLineAtStart();
         builder.addLineAtStart(new SidebarBuilder.Line("players", MiniMessage.get().parse(prefixColor + "Players: " + valueColor + getPlayers().size())));
-        return null;
+        return builder.build();
     }
 
     private Sidebar createGameSidebar(GamePlayer viewer, String prefixColor, String valueColor) {
         var builder = createSidebarBuilder();
 
-        builder.addLineAtStart(new SidebarBuilder.Line("distance", MiniMessage.get().parse(prefixColor + "Distance from clown: " + valueColor + getDistanceFromClown(viewer) + "m")));
-        builder.emptyLineAtStart();
         createLeaderboard(viewer, builder);
+        builder.emptyLineAtStart();
+        builder.addLineAtStart(new SidebarBuilder.Line("distance", MiniMessage.get().parse(prefixColor + "Distance from clown: " + valueColor + getDistanceFromClown(viewer) + "m")));
         return builder.build();
     }
 
@@ -419,6 +442,7 @@ public class HalloweenGame extends Game {
 
     @Override
     public void endGame(Ending ending) {
+        toggleClownAttacks(false);
         getPlayers().forEach(player -> player.hideBossBar(bossBar));
         for(var entry : clowns.entrySet()) {
             entry.getValue().remove();
@@ -428,5 +452,20 @@ public class HalloweenGame extends Game {
 
             clowns.remove(gamePlayer);
         }
+    }
+
+    @Override
+    public void join(GamePlayer gamePlayer) {
+        super.join(gamePlayer);
+        displaySidebar(gamePlayer, createLobbySidebar(gamePlayer, PREFIX_COLOR, VALUE_COLOR));
+        updateSidebar("players", MiniMessage.get().parse(PREFIX_COLOR + "Players: " + VALUE_COLOR + getPlayers().size()));
+    }
+
+    @Override
+    public void leave(GamePlayer gamePlayer) {
+        super.leave(gamePlayer);
+
+        sidebarDisplay.get(gamePlayer).removeViewer(gamePlayer.getPlayer());
+        sidebarDisplay.remove(gamePlayer);
     }
 }
