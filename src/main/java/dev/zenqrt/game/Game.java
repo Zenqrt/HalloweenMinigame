@@ -49,7 +49,7 @@ public abstract class Game {
                 this::startGame).repeat(Duration.of(1, TimeUnit.SECOND)).schedule());
     }
 
-    public void endGame(Ending ending) {
+    public void endGame() {
         new ArrayList<>(listeners).forEach(this::removeListener);
         new HashMap<>(tasks).forEach((key, task) -> {
             task.cancel();
@@ -119,6 +119,10 @@ public abstract class Game {
 
     public GameOptions getGameOptions() {
         return gameOptions;
+    }
+
+    public GameState getState() {
+        return state;
     }
 
     public int getId() {

@@ -13,7 +13,8 @@ import java.util.Objects;
 
 public class HalloweenLobbyWorld implements MinecraftWorld {
 
-    private static final DimensionType DIMENSION_TYPE = DimensionType.builder(NamespaceID.from("halloween_lobby"))
+    public static final DimensionType DIMENSION_TYPE = DimensionType.builder(NamespaceID.from("halloween_lobby"))
+            .skylightEnabled(true)
             .fixedTime(18000L)
             .build();
 

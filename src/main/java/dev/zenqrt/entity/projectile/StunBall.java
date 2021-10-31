@@ -1,5 +1,7 @@
 package dev.zenqrt.entity.projectile;
 
+import dev.zenqrt.potion.PotionEffectHandler;
+import dev.zenqrt.potion.SlownessEffectHandler;
 import dev.zenqrt.utils.particle.ParticleEmitter;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Vec;
@@ -21,7 +23,12 @@ public class StunBall extends PowerUpProjectile {
 
     @Override
     public Potion getWeirdoPotionMan() {
-        return new Potion(PotionEffect.SLOWNESS, (byte) 100, 10);
+        return new Potion(PotionEffect.SLOWNESS, (byte) 100, 100);
+    }
+
+    @Override
+    public PotionEffectHandler getPotionEffectHandler(Player player) {
+        return new SlownessEffectHandler(player);
     }
 
     @Override

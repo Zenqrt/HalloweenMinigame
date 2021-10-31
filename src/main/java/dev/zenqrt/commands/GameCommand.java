@@ -2,10 +2,7 @@ package dev.zenqrt.commands;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.InvalidCommandArgument;
-import co.aikar.commands.annotation.CommandAlias;
-import co.aikar.commands.annotation.Default;
-import co.aikar.commands.annotation.Description;
-import co.aikar.commands.annotation.Subcommand;
+import co.aikar.commands.annotation.*;
 import dev.zenqrt.game.Game;
 import dev.zenqrt.game.GameManager;
 import dev.zenqrt.game.GamePlayer;
@@ -17,6 +14,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @CommandAlias("game")
 @Description("Game command.")
+@CommandPermission("game")
 public class GameCommand extends BaseCommand {
 
     private final GameManager gameManager;

@@ -54,7 +54,6 @@ public class SidebarBuilder {
         for(int i = 0; i < lines.size(); i++) {
             var line = lines.get(i);
             sidebar.createLine(new Sidebar.ScoreboardLine(line.id(), line.content(), i));
-            System.out.println("Line = " + PlainTextComponentSerializer.plainText().serialize(line.content));
         }
 
         return sidebar;

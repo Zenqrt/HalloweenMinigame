@@ -10,4 +10,8 @@ public interface MazeWallDecoration {
     void createBottomHorizontalWall(AbsoluteBlockBatch batch, Point point);
     void createTopHorizontalWall(AbsoluteBlockBatch batch, Point point);
 
+    int getLength();
+    int getWidth();
+    int getHeight();
+
 }

@@ -59,7 +59,7 @@ public class FollowingHologram implements Viewable {
         if(instance != null) {
             this.entity.setInstance(instance, spawnPosition.add(offset));
         }
-        this.entity.setAutoViewable(autoViewable);
+//        this.entity.setAutoViewable(autoViewable);
     }
 
     public Pos getPosition() {

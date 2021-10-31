@@ -2,6 +2,7 @@ package dev.zenqrt.server.listeners;
 
 import com.github.christian162.annotations.Listen;
 import com.github.christian162.annotations.Node;
+import dev.zenqrt.entity.monster.KillerClown;
 import dev.zenqrt.game.GamePlayer;
 import dev.zenqrt.server.MojangService;
 import dev.zenqrt.utils.WorldUtils;
@@ -34,17 +35,23 @@ public class ServerEvents {
     public void onPlayerLogin(PlayerLoginEvent event) {
         final var player = event.getPlayer();
 
-        event.setSpawningInstance(instanceContainer);
-        player.setRespawnPoint(WorldUtils.getInstanceSpawnpoint(instanceContainer));
-        player.setGameMode(GameMode.CREATIVE);
-        player.setAllowFlying(true);
+        if(player instanceof KillerClown clown) {
+            var instance = clown.getTarget().getInstance();
+            if(instance != null) {
+                event.setSpawningInstance(instance);
+            }
+            return;
+        }
+
 
         if(!(player instanceof FakePlayer)) {
-            player.setUuid(Objects.requireNonNullElse(MojangService.retrieveUuid(player.getUsername()), UUID.randomUUID()));
+            event.setSpawningInstance(instanceContainer);
+            player.setGameMode(GameMode.ADVENTURE);
+            player.setRespawnPoint(WorldUtils.getInstanceSpawnpoint(instanceContainer));
         }
 
         if(plainText.serialize(player.getName()).equals("Walmqrt")) {
-            player.addPermission(new Permission("events.command.spawnclown"));
+            player.addPermission(new Permission("game"));
             System.out.println("has: " + player.hasPermission("events.command.spawnclown"));
         }
     }

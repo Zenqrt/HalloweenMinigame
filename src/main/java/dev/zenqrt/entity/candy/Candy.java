@@ -1,5 +1,6 @@
-package dev.zenqrt.entity;
+package dev.zenqrt.entity.candy;
 
+import dev.zenqrt.entity.RotatingArmorStand;
 import dev.zenqrt.utils.entity.EntityUtils;
 import dev.zenqrt.utils.TextureUtils;
 import dev.zenqrt.utils.particle.ParticleEmitter;
@@ -16,6 +17,7 @@ import net.minestom.server.particle.Particle;
 import net.minestom.server.sound.SoundEvent;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public class Candy extends RotatingArmorStand {
 
@@ -26,7 +28,9 @@ public class Candy extends RotatingArmorStand {
         this.consumeParticleEmitter = createConsumeEmitter(Block.WHITE_CONCRETE.id());
         this.colorConsumeParticleEmitter = createConsumeEmitter(color.blockId);
         this.setHelmet(ItemStack.builder(Material.PLAYER_HEAD)
-                .meta(PlayerHeadMeta.class, meta -> meta.playerSkin(color.getPlayerSkin()))
+                .meta(PlayerHeadMeta.class, meta -> meta
+                        .skullOwner(UUID.randomUUID())
+                        .playerSkin(color.getPlayerSkin()))
                 .build()
         );
 
@@ -35,6 +39,7 @@ public class Candy extends RotatingArmorStand {
             m.setInvisible(true);
             m.setHasNoGravity(true);
             m.setHasNoBasePlate(true);
+            m.setSmall(true);
         });
     }
 
@@ -49,15 +54,16 @@ public class Candy extends RotatingArmorStand {
         var position = player.getPosition().add(0, player.getEyeHeight(), 0);
         player.sendPacketToViewersAndSelf(consumeParticleEmitter.createPacket(position));
         player.sendPacketToViewersAndSelf(colorConsumeParticleEmitter.createPacket(position));
-        Objects.requireNonNull(player.getInstance()).playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_BURP, Sound.Source.PLAYER, 1, 1.5f), Sound.Emitter.self());
+        Objects.requireNonNull(player.getInstance()).playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_BURP, Sound.Source.PLAYER, 1, 1.5f), position.x(), position.y(), position.z());
         this.remove();
     }
 
     private ParticleEmitter createConsumeEmitter(int blockId) {
-        return new ParticleEmitter(Particle.BLOCK, new Vec(0.5), 0.01f, 10, true, writer -> writer.writeInt(blockId));
+        return new ParticleEmitter(Particle.BLOCK, new Vec(0.5), 0.01f, 10, true, writer -> writer.writeVarInt(blockId));
     }
 
     public enum Color {
+        GOLDEN("http://textures.minecraft.net/texture/a914147744cd218c9a078234f7035c71e4a34859af92fc91b88c21e8b37223c5", Block.GOLD_BLOCK),
         RED("http://textures.minecraft.net/texture/2b21617d2755bc20f8f7e388f49e48582745fec16bb14c776f7118f98c55e8", Block.RED_CONCRETE),
         BLUE("http://textures.minecraft.net/texture/2542575423246faa73a3763e1b46dcfa3f46edb9b15acb0bc1190146ee19d", Block.BLUE_CONCRETE),
         GREEN("http://textures.minecraft.net/texture/7ecd5e8480214bd633756e6192e1473ce26aaba7a6fb82f591880ab4877563", Block.GREEN_CONCRETE),

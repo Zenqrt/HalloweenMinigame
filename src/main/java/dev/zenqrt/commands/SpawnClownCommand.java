@@ -15,12 +15,12 @@ public class SpawnClownCommand extends BaseCommand {
 
     @Default
     public void spawn(Player player) {
-        var clown = new KillerClown(new FakePlayerOption(), fakePlayer -> {
-            fakePlayer.teleport(player.getPosition());
-            fakePlayer.setTeam(HalloweenGame.PLAYER_TEAM);
-        });
-        clown.setTarget(player);
-        clown.setAttacking(true);
+//        var clown = new KillerClown(new FakePlayerOption(), fakePlayer -> {
+//            fakePlayer.teleport(player.getPosition());
+//            fakePlayer.setTeam(HalloweenGame.PLAYER_TEAM);
+//        });
+//        clown.setTarget(player);
+//        clown.setAttacking(true);
         player.sendMessage("spawned clown");
     }
 

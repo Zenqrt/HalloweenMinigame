@@ -19,9 +19,8 @@ public class PotionEffectManager {
     private final Map<Player, Task> effects = new HashMap<>();
 
     public void applyEffect(Player player, Potion potion, PotionEffectHandler handler) {
-        var context = new PotionEffectHandler.Context(player, potion);
         player.addEffect(potion);
-        handler.onApply(context);
+        handler.onApply(potion);
 
         Task task;
         if(handler.isTickable()) {
@@ -30,16 +29,16 @@ public class PotionEffectManager {
                 @Override
                 public void run() {
                     if(timer <= 0) {
-                        handler.onRemove(context);
+                        handler.onRemove(potion);
                         this.cancel();
                         return;
                     }
-                    handler.tick(context);
+                    handler.tick(potion);
                     timer--;
                 }
             }.repeat(Duration.of(potion.getDuration(), TimeUnit.SERVER_TICK)).schedule();
         } else {
-            task = MinecraftServer.getSchedulerManager().buildTask(() -> handler.onRemove(context))
+            task = MinecraftServer.getSchedulerManager().buildTask(() -> handler.onRemove(potion))
                     .delay(Duration.of(potion.getDuration(), TimeUnit.SERVER_TICK)).schedule();
         }
 

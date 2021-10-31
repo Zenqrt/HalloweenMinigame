@@ -12,6 +12,7 @@ import dev.zenqrt.game.GamePlayer;
 import dev.zenqrt.game.listeners.GameEvents;
 import dev.zenqrt.potion.PotionEffectManager;
 import dev.zenqrt.server.listeners.ServerEvents;
+import dev.zenqrt.server.provider.MojangUuidProvider;
 import dev.zenqrt.world.block.handlers.SignBlockHandler;
 import dev.zenqrt.world.block.handlers.SkullBlockHandler;
 import dev.zenqrt.world.block.rule.PressurePlatePlacementRule;
@@ -21,6 +22,7 @@ import net.minestom.server.extras.MojangAuth;
 import net.minestom.server.extras.optifine.OptifineSupport;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.network.UuidProvider;
 
 public class MinestomServer {
 
@@ -52,8 +54,8 @@ public class MinestomServer {
             if(gamePlayer == null) throw new InvalidCommandArgument("Could not find game player");
             return gamePlayer;
         });
-        commandManager.registerCommand(new CreateMazeCommand());
-        commandManager.registerCommand(new SpawnClownCommand());
+//        c/*ommandManager.registerCommand(new CreateMazeCommand());
+//        commandManager.registerCommand(new SpawnClownCommand());
         commandManager.registerCommand(new GiveCommand());
         commandManager.registerCommand(new GameCommand(gameManager));
 
@@ -76,6 +78,8 @@ public class MinestomServer {
         blockManager.registerBlockPlacementRule(new PressurePlatePlacementRule(Block.HEAVY_WEIGHTED_PRESSURE_PLATE));
 
         potionEffectManager = new PotionEffectManager();
+
+        MinecraftServer.getConnectionManager().setUuidProvider(new MojangUuidProvider());
 
         // Event Handler
         var globalEventHandler = MinecraftServer.getGlobalEventHandler();

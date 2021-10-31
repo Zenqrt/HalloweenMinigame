@@ -1,10 +1,11 @@
 package dev.zenqrt.game.halloween.maze.themes.ground;
 
+import dev.zenqrt.game.halloween.maze.themes.SolidDecoration;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.instance.batch.AbsoluteBlockBatch;
 import net.minestom.server.instance.block.Block;
 
-public class SolidGroundDecoration implements MazeGroundDecoration {
+public class SolidGroundDecoration implements MazeGroundDecoration, SolidDecoration {
 
     private final Block block;
 
@@ -21,5 +22,10 @@ public class SolidGroundDecoration implements MazeGroundDecoration {
                 }
             }
         }
+    }
+
+    @Override
+    public Block getBlock() {
+        return block;
     }
 }

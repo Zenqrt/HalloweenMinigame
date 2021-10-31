@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+// TODO: Item idea: Item that locates candies nearby
 public class CustomItem {
 
     private static final String ITEM_ID_TAG = "item-id";

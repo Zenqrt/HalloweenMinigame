@@ -1,17 +1,22 @@
 package dev.zenqrt.game.halloween.maze.themes.wall;
 
-import dev.zenqrt.game.halloween.maze.themes.SolidDecoration;
+import dev.zenqrt.game.halloween.maze.themes.MixtureDecoration;
+import kotlin.Pair;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.instance.batch.AbsoluteBlockBatch;
 import net.minestom.server.instance.block.Block;
 
-public class SolidWallDecoration implements MazeWallDecoration, SolidDecoration {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
-    private final Block block;
+public class MixtureWallDecoration implements MazeWallDecoration, MixtureDecoration {
+
+    private final List<Pair<Block, Float>> blocks = new ArrayList<>();
     private final int length,width,height;
 
-    public SolidWallDecoration(Block block, int length, int width, int height) {
-        this.block = block;
+    public MixtureWallDecoration(List<Pair<Block, Float>> blocks, int length, int width, int height) {
+        this.blocks.addAll(blocks);
         this.length = length;
         this.width = width;
         this.height = height;
@@ -28,10 +33,11 @@ public class SolidWallDecoration implements MazeWallDecoration, SolidDecoration 
     }
 
     private void createVerticalWall(AbsoluteBlockBatch batch, Point pos) {
+        var random = ThreadLocalRandom.current();
         for (int x = 0; x < width; x++) {
             for (int z = 0; z < length; z++) {
                 for (int y = 0; y < height; y++) {
-                    batch.setBlock(pos.add(x, y, z), block);
+                    batch.setBlock(pos.add(x, y, z), chooseBlock(random));
                 }
             }
         }
@@ -48,18 +54,19 @@ public class SolidWallDecoration implements MazeWallDecoration, SolidDecoration 
     }
 
     private void createHorizontalWall(AbsoluteBlockBatch batch, Point pos) {
+        var random = ThreadLocalRandom.current();
         for (int x = 0; x < length; x++) {
             for (int z = 0; z < width; z++) {
                 for (int y = 0; y < height; y++) {
-                    batch.setBlock(pos.add(x, y, z), block);
+                    batch.setBlock(pos.add(x, y, z), chooseBlock(random));
                 }
             }
         }
     }
 
     @Override
-    public Block getBlock() {
-        return block;
+    public List<Pair<Block, Float>> getBlocks() {
+        return blocks;
     }
 
     @Override
@@ -76,4 +83,5 @@ public class SolidWallDecoration implements MazeWallDecoration, SolidDecoration 
     public int getHeight() {
         return height;
     }
+
 }

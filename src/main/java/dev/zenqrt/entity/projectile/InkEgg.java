@@ -1,5 +1,7 @@
 package dev.zenqrt.entity.projectile;
 
+import dev.zenqrt.potion.EmptyEffectHandler;
+import dev.zenqrt.potion.PotionEffectHandler;
 import dev.zenqrt.utils.particle.ParticleEmitter;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Vec;
@@ -17,11 +19,18 @@ public class InkEgg extends PowerUpProjectile {
 
     public InkEgg(@Nullable Player shooter) {
         super("Ink Egg", shooter, EntityType.EGG);
+
+        setBoundingBox(10,10,10);
     }
 
     @Override
     public Potion getWeirdoPotionMan() {
-        return new Potion(PotionEffect.BLINDNESS, (byte) 100, 10);
+        return new Potion(PotionEffect.BLINDNESS, (byte) 100, 100);
+    }
+
+    @Override
+    public PotionEffectHandler getPotionEffectHandler(Player player) {
+        return new EmptyEffectHandler(player);
     }
 
     public Sound getLocalHitSound() {

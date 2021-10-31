@@ -65,14 +65,12 @@ public class MeleeAttackTrait extends PlayerEntityTrait {
                 return;
             }
 
-            if(time % 3 == 0) {
-                var navigator = this.playerEntity.getNavigator();
-                var pathPosition = navigator.getPathPosition();
-                var targetPosition = target.getPosition();
-                if ((pathPosition == null || !pathPosition.samePoint(targetPosition)) && this.cooldown.isReady(time)) {
-                    this.cooldown.refreshLastUpdate(time);
-                    navigator.setPathTo(targetPosition, true);
-                }
+            var navigator = this.playerEntity.getNavigator();
+            var pathPosition = navigator.getPathPosition();
+            var targetPosition = target.getPosition();
+            if ((pathPosition == null || !pathPosition.samePoint(targetPosition)) && this.cooldown.isReady(time)) {
+                this.cooldown.refreshLastUpdate(time);
+                navigator.setPathTo(targetPosition, true);
             }
         }
 

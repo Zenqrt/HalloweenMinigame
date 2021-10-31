@@ -5,6 +5,8 @@ import dev.zenqrt.entity.ai.trait.MeleeAttackTrait;
 import dev.zenqrt.entity.other.FollowingHologram;
 import dev.zenqrt.entity.other.HologramTag;
 import dev.zenqrt.entity.player.PlayerEntity;
+import dev.zenqrt.utils.entity.EntityUtils;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -12,17 +14,21 @@ import net.minestom.server.attribute.Attribute;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.LivingEntity;
+import net.minestom.server.entity.Player;
 import net.minestom.server.entity.PlayerSkin;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.entity.fakeplayer.FakePlayer;
 import net.minestom.server.entity.fakeplayer.FakePlayerOption;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
+import net.minestom.server.potion.PotionEffect;
+import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.utils.time.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.temporal.TemporalUnit;
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -32,7 +38,7 @@ public class KillerClown extends PlayerEntity implements HologramTag {
     private boolean attacking;
 
     @SuppressWarnings("all")
-    public KillerClown(@NotNull FakePlayerOption option, @Nullable Consumer<FakePlayer> spawnCallback) {
+    public KillerClown(@NotNull FakePlayerOption option, Player target, @Nullable Consumer<FakePlayer> spawnCallback) {
         super(UUID.randomUUID(), "murder_clown", option, spawnCallback);
         this.getNavigator().getPathingEntity().setSearchRange(100);
         this.addTraitGroup(
@@ -48,14 +54,40 @@ public class KillerClown extends PlayerEntity implements HologramTag {
         this.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.3f);
         this.attacking = false;
         enableSkinLayers();
-        this.setGlowing(true);
+        this.setTarget(target);
     }
 
     @Override
     public void spawn() {
         super.spawn();
-        System.out.println("Has instance null: " + (this.getInstance() == null));
         this.hologramTag = new FollowingHologram(this, Component.text("Your Clown", TextColor.color(0, 255, 153)).decorate(TextDecoration.BOLD), Vec.ZERO.withY(this.getEyeHeight() - 0.5));
+    }
+
+    @Override
+    public void update(long time) {
+        super.update(time);
+
+        if(getTarget() instanceof Player player) {
+            if(hologramTag != null) {
+                this.hologramTag.getEntity().addViewer(player);
+            }
+
+            entityMeta.setNotifyAboutChanges(false);
+            entityMeta.setHasGlowingEffect(true);
+            var packet = getMetadataPacket();
+            player.getPlayerConnection().sendPacket(packet);
+            entityMeta.setHasGlowingEffect(false);
+        }
+
+        if(hologramTag != null) {
+            var remove = new ArrayList<Player>();
+            for(var player : hologramTag.getViewers()) {
+                if(player != getTarget()) {
+                    remove.add(player);
+                }
+            }
+            remove.forEach(hologramTag::removeViewer);
+        }
     }
 
     @Override
@@ -63,9 +95,16 @@ public class KillerClown extends PlayerEntity implements HologramTag {
         super.attack(target, swingHand);
 
         if(target instanceof LivingEntity entity) {
-            var vector = this.getPosition().asVec().sub(entity.getPosition()).normalize();
+            if(EntityUtils.hasActiveEffect(entity, PotionEffect.RESISTANCE)) {
+                var pos = entity.getPosition();
+                instance.playSound(Sound.sound(SoundEvent.BLOCK_LAVA_EXTINGUISH, Sound.Source.PLAYER, 1, 1), pos.x(), pos.y(), pos.z());
+                return;
+            }
+
+            var vector = this.getPosition().asVec().sub(entity.getPosition()).normalize().mul(-10);
             entity.damage(DamageType.fromEntity(this), 2);
-            entity.takeKnockback(1, vector.x(), vector.z());
+            entity.setVelocity(vector.withY(10));
+//            entity.takeKnockback(1, vector.x(), vector.z());
         }
     }
 

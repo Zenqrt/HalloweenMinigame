@@ -4,6 +4,7 @@ import dev.zenqrt.entity.projectile.StunBall;
 import dev.zenqrt.item.projectile.ThrowableItem;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.entity.EntityProjectile;
 import net.minestom.server.entity.Player;
 import net.minestom.server.item.ItemStack;
@@ -13,7 +14,10 @@ public class StunBallItem extends ThrowableItem {
 
     public StunBallItem() {
         super("stun_ball", ItemStack.builder(Material.SNOWBALL)
-                .displayName(Component.text("Stun Ball", NamedTextColor.LIGHT_PURPLE)).build(), 1.25, 0);
+                        .displayName(Component.text("Stun Ball", NamedTextColor.LIGHT_PURPLE)
+                                .decoration(TextDecoration.ITALIC, false))
+                        .build(),
+                1.25, 0);
     }
 
     @Override
