@@ -36,6 +36,7 @@ public final class ClownChaseGame extends GameState {
 
     private final Map<UUID, Clown> playerToClown = new HashMap<>();
 
+    private final Map<UUID, GamePlayerData> playerData = new HashMap<>();
     private final Map<UUID, ClownChasePlayer> players = new HashMap<>();
     private final MazeTheme<?, ?> theme;
     private final MazeBoard board;
@@ -115,6 +116,15 @@ public final class ClownChaseGame extends GameState {
         states.get(--stateIndex).start();
     }
 
+    public GamePlayerData getPlayerData(UUID uuid) {
+        GamePlayerData data = this.playerData.get(uuid);
+
+        if (data == null)
+            throw new IllegalStateException("Player data missing for " + uuid);
+
+        return data;
+    }
+
     public Audience audience() {
         return Audience.audience(players.values());
     }
@@ -127,13 +137,14 @@ public final class ClownChaseGame extends GameState {
             throw new GameAlreadyFullException(this);
 
         this.players.put(gamePlayer.getUniqueId(), gamePlayer);
+        this.playerData.put(gamePlayer.getUniqueId(), new GamePlayerData());
 
         GamePlayerJoinEvent joinEvent = new GamePlayerJoinEvent(gamePlayer, this);
         Bukkit.getPluginManager().callEvent(joinEvent);
     }
 
     public boolean removePlayer(ClownChasePlayer gamePlayer) {
-        return this.players.remove(gamePlayer.getUniqueId(), gamePlayer);
+        return this.players.remove(gamePlayer.getUniqueId(), gamePlayer) || this.playerData.remove(gamePlayer.getUniqueId()) != null;
     }
 
     public boolean canPlayerJoin() {
@@ -143,7 +154,7 @@ public final class ClownChaseGame extends GameState {
     /**
      * todo: Please remove this after replacing this method. The better method will be placed in MazeUtils
      */
-    public BlockPosition findAvailableSpawn() {
+    public BlockPosition findAvailableSpawn(int xRadius, int zRadius) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
 
         int xMax = this.board.getDimensionX() * 6; // 6 is the scale. This should not be hardcoded like this TODO <--------
@@ -153,7 +164,7 @@ public final class ClownChaseGame extends GameState {
 
         do {
             position = Position.block(random.nextInt(xMax), 42, random.nextInt(yMax));
-        } while (!isSurroundingAreaOpen(this.gameWorld, position, 1, 1));
+        } while (!isSurroundingAreaOpen(this.gameWorld, position, xRadius, zRadius));
 
         return position;
     }

@@ -45,7 +45,7 @@ public final class SetupPlayersGameState extends GameState {
         // ----- LEGACY IMPL -----
         for (ClownChasePlayer gamePlayer : game.getPlayers().values()) {
             Player player = gamePlayer.validatePlayer();
-            BlockPosition spawn = this.game.findAvailableSpawn();
+            BlockPosition spawn = this.game.findAvailableSpawn(1, 1);
 
             // Set player properties
             player.teleport(spawn.toLocation(this.game.getGameWorld()));
