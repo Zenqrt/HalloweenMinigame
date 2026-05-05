@@ -1,19 +1,18 @@
 package dev.zenqrt.clownchase.game;
 
 import dev.zenqrt.clownchase.ClownChasePlugin;
+import dev.zenqrt.clownchase.entity.Clown;
 import dev.zenqrt.clownchase.event.events.GamePlayerJoinEvent;
 import dev.zenqrt.clownchase.exceptions.GameAlreadyFullException;
 import dev.zenqrt.clownchase.exceptions.GamePlayerAlreadyInGameException;
 import dev.zenqrt.clownchase.game.base.GameState;
-import dev.zenqrt.clownchase.game.states.FreezeCountdownGameState;
-import dev.zenqrt.clownchase.game.states.IntermissionGameState;
-import dev.zenqrt.clownchase.game.states.SetupPlayersGameState;
+import dev.zenqrt.clownchase.game.states.*;
 import dev.zenqrt.clownchase.maze.MazeBoard;
 import dev.zenqrt.clownchase.maze.MazeBuilder;
 import dev.zenqrt.clownchase.maze.strategy.MazeGenerationStrategy;
 import dev.zenqrt.clownchase.maze.strategy.RecursiveDivisionStrategy;
 import dev.zenqrt.clownchase.maze.theme.MazeTheme;
-import dev.zenqrt.clownchase.maze.theme.wall.WallDirection;
+import dev.zenqrt.clownchase.utils.maze.MazeUtils;
 import dev.zenqrt.clownchase.world.generator.VoidGenerator;
 import io.papermc.paper.math.Position;
 import net.kyori.adventure.audience.Audience;
@@ -33,6 +32,8 @@ public final class ClownChaseGame extends GameState {
     private World gameWorld;
     private boolean worldReady;
 
+    private final Map<ClownChasePlayer, Clown> clowns = new HashMap<>();
+
     private final Map<UUID, ClownChasePlayer> players = new HashMap<>();
     private final MazeTheme<?, ?> theme;
     private final MazeBoard board;
@@ -50,15 +51,16 @@ public final class ClownChaseGame extends GameState {
         this.states = List.of(
                 new IntermissionGameState(this),
                 new SetupPlayersGameState(this),
-                new FreezeCountdownGameState(this)
+                new SpawnClownsGameState(this),
+                new FreezeCountdownGameState(this),
+                new ChaseGameState(this)
         );
         this.stateIndex = 0;
     }
 
     @Override
     protected void onStateStart() {
-        // TODO: Make worldgen async if possible
-        // Generate world
+        // Generate world  -----------    TODO: Make world gen async if possible
         this.gameWorld = WorldCreator.name("clown-chase_" + this.gameId)
                 .generator(new VoidGenerator())
                 .createWorld();
@@ -70,45 +72,19 @@ public final class ClownChaseGame extends GameState {
         this.gameWorld.setGameRule(GameRules.SPAWN_MOBS, false);
         this.gameWorld.setGameRule(GameRules.ADVANCE_TIME, false);
         this.gameWorld.setGameRule(GameRules.ADVANCE_WEATHER, false);
+        this.gameWorld.setGameRule(GameRules.SPECTATORS_GENERATE_CHUNKS, false);
+        this.gameWorld.setGameRule(GameRules.FALL_DAMAGE, false);
+        this.gameWorld.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
 
         // Generate maze
         MAZE_GENERATION_STRATEGY.execute(this.board);
 
-        printMaze(this.board);
+        MazeUtils.printMaze(this.board);
         MazeBuilder.constructMaze(this.board, this.theme, 6, this.gameWorld, Position.block(0, 42, 0));
 
         this.worldReady = true;
-
         this.states.get(stateIndex).start();
     }
-
-    public static void printMaze(MazeBoard board) {
-        System.out.print(" " + "_".repeat(Math.max(0, board.getDimensionX() * 2 - 1)));
-        for(int y = 0; y < board.getDimensionY(); y++) {
-            System.out.println();
-            System.out.print("|");
-
-            for(int x = 0; x < board.getDimensionX(); x++) {
-                var cell = board.getBlock(x, y);
-                var bottom = y+1 >= board.getDimensionY();
-                var south = cell == WallDirection.SOUTH || bottom;
-                var south2 = x+1 < board.getDimensionX() && board.getBlock(x+1, y) == WallDirection.SOUTH || bottom;
-                var east = cell == WallDirection.EAST || x+1 >= board.getDimensionX();
-
-                System.out.print(south ? "_" : " ");
-                System.out.print(east ? "|" : south && south2 ? "_" : " ");
-            }
-        }
-
-        for (int y = 0; y < board.getDimensionY(); y++){
-            for (int x = 0; x < board.getDimensionX(); x++) {
-                System.out.print(board.getBlock(x, y));
-            }
-
-            System.out.println();
-        }
-    }
-
 
     @Override
     protected void onStateEnd() {
@@ -160,6 +136,18 @@ public final class ClownChaseGame extends GameState {
 
     public boolean canPlayerJoin() {
         return this.players.size() < this.gameSettings.maxPlayers();
+    }
+
+    public void assignClown(ClownChasePlayer gamePlayer, Clown clown) {
+        clowns.put(gamePlayer, clown);
+    }
+
+    public void unassignClown(ClownChasePlayer gamePlayer) {
+        clowns.remove(gamePlayer);
+    }
+
+    public Map<ClownChasePlayer, Clown> getClowns() {
+        return Collections.unmodifiableMap(clowns);
     }
 
     public Map<UUID, ClownChasePlayer> getPlayers() {

@@ -5,6 +5,7 @@ import dev.zenqrt.clownchase.game.ClownChasePlayer;
 import dev.zenqrt.clownchase.game.base.GameState;
 import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.math.Position;
+import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
@@ -18,6 +19,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class SetupPlayersGameState extends GameState {
 
     private static final AttributeModifier SPEED_MODIFIER = new AttributeModifier(NamespacedKey.minecraft("game_speed"), 0.5, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
+    private static final double MAX_HEALTH = 6;
     private final ClownChaseGame game;
 
     public SetupPlayersGameState(ClownChaseGame game) {
@@ -57,10 +59,21 @@ public final class SetupPlayersGameState extends GameState {
             } while (!isSurroundingAreaOpen(this.game.getGameWorld(), position, 1, 1));
 
             Player player = gamePlayer.validatePlayer();
+
+            // Set player properties
             player.teleport(position.toLocation(this.game.getGameWorld()));
+            player.setGameMode(GameMode.ADVENTURE);
+            player.setFoodLevel(20);
+            player.setHealth(MAX_HEALTH);
+            player.setExp(0);
+            player.setLevel(0);
 
             AttributeInstance movementSpeed = Objects.requireNonNull(player.getAttribute(Attribute.MOVEMENT_SPEED), "movementSpeed");
             movementSpeed.addTransientModifier(SPEED_MODIFIER);
+
+            AttributeInstance maxHealth = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH), "maxHealth");
+            AttributeModifier healthModifier = new AttributeModifier(NamespacedKey.minecraft("game_health"), MAX_HEALTH - maxHealth.getValue(), AttributeModifier.Operation.ADD_NUMBER);
+            maxHealth.addTransientModifier(healthModifier);
         }
 
         this.game.nextState();

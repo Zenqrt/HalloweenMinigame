@@ -91,8 +91,8 @@ public final class FreezeCountdownGameState extends GameState implements Listene
 
             if (currentTime <= 5) {
                 players.showTitle(Title.title(
-                        Component.translatable(MOVE_COUNTDOWN_TIMER_TITLE, TextColorPresets.NUMBER, Component.text(currentTime)),
-                        Component.translatable(MOVE_COUNTDOWN_TIMER_SUBTITLE, TextColorPresets.TEXT),
+                        Component.translatable(MOVE_COUNTDOWN_TIMER_TITLE, TextColorPresets.NUMBER, Component.text(currentTime)).decorate(TextDecoration.BOLD),
+                        Component.empty(),
                         Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ZERO)
                 ));
             }
