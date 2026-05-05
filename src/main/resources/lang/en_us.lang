@@ -6,3 +6,6 @@ game.countdown.move_timer=ʏᴏᴜ ᴄᴀɴ ᴍᴏᴠᴇ ɪɴ {0} ꜱᴇᴄᴏɴ
 game.countdown.move_timer.title={0}
 game.countdown.move_timer.subtitle=Prepare to move!
 game.start.title=RUN!
+game.death.title=YOU DIED!
+game.respawn.timer=ʀᴇꜱᴘᴀᴡɴɪɴɢ ɪɴ {0} ꜱᴇᴄᴏɴᴅꜱ...
+game.respawn.title=RESPAWNED!

@@ -28,7 +28,7 @@ public final class ClownChasePlugin extends JavaPlugin {
         registerTranslations(ClownChasePlugin.class.getClassLoader().getResourceAsStream("lang/en_us.lang"));
 
         gameManager = new GameManager(this);
-        gameManager.createGame(new GameSettings(6, 12, 300)).start();
+        gameManager.createGame(new GameSettings(6, 12, 300, 6)).start();
 
         Bukkit.getPluginManager().registerEvents(new PlayerActivityListeners(this, gameManager), this);
         Bukkit.getPluginManager().registerEvents(new GameplayListeners(), this);

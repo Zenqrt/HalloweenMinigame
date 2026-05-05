@@ -4,22 +4,18 @@ import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.ClownChasePlayer;
 import dev.zenqrt.clownchase.game.base.GameState;
 import io.papermc.paper.math.BlockPosition;
-import io.papermc.paper.math.Position;
 import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
-import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 
 import java.util.Objects;
-import java.util.concurrent.ThreadLocalRandom;
 
 public final class SetupPlayersGameState extends GameState {
 
     private static final AttributeModifier SPEED_MODIFIER = new AttributeModifier(NamespacedKey.minecraft("game_speed"), 0.5, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
-    private static final double MAX_HEALTH = 6;
     private final ClownChaseGame game;
 
     public SetupPlayersGameState(ClownChaseGame game) {
@@ -48,23 +44,14 @@ public final class SetupPlayersGameState extends GameState {
 
         // ----- LEGACY IMPL -----
         for (ClownChasePlayer gamePlayer : game.getPlayers().values()) {
-            int xMax = this.game.getBoard().getDimensionX() * 6; // 6 is the scale. This should not be hardcoded like this TODO <--------
-            int yMax = this.game.getBoard().getDimensionY() * 6;
-
-            ThreadLocalRandom random = ThreadLocalRandom.current();
-            BlockPosition position;
-
-            do {
-                position = Position.block(random.nextInt(xMax), 42, random.nextInt(yMax));
-            } while (!isSurroundingAreaOpen(this.game.getGameWorld(), position, 1, 1));
-
             Player player = gamePlayer.validatePlayer();
+            BlockPosition spawn = this.game.findAvailableSpawn();
 
             // Set player properties
-            player.teleport(position.toLocation(this.game.getGameWorld()));
+            player.teleport(spawn.toLocation(this.game.getGameWorld()));
             player.setGameMode(GameMode.ADVENTURE);
             player.setFoodLevel(20);
-            player.setHealth(MAX_HEALTH);
+            player.setHealth(this.game.getGameSettings().maxHealth());
             player.setExp(0);
             player.setLevel(0);
 
@@ -72,22 +59,14 @@ public final class SetupPlayersGameState extends GameState {
             movementSpeed.addTransientModifier(SPEED_MODIFIER);
 
             AttributeInstance maxHealth = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH), "maxHealth");
-            AttributeModifier healthModifier = new AttributeModifier(NamespacedKey.minecraft("game_health"), MAX_HEALTH - maxHealth.getValue(), AttributeModifier.Operation.ADD_NUMBER);
+            AttributeModifier healthModifier = new AttributeModifier(
+                    NamespacedKey.minecraft("game_health"),
+                    this.game.getGameSettings().maxHealth() - maxHealth.getValue(),
+                    AttributeModifier.Operation.ADD_NUMBER
+            );
             maxHealth.addTransientModifier(healthModifier);
         }
 
         this.game.nextState();
-    }
-
-    private static boolean isSurroundingAreaOpen(World world, BlockPosition origin, int xArea, int zArea) {
-        for (int x = -xArea; x <= xArea; x++) {
-            for (int z = -zArea; z <= zArea; z++) {
-                BlockPosition position = origin.offset(x, 0, z);
-
-                if (!world.getBlockAt(position.blockX(), position.blockY(), position.blockZ()).isEmpty())
-                    return false;
-            }
-        }
-        return true;
     }
 }

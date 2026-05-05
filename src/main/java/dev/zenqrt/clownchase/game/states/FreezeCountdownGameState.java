@@ -41,7 +41,7 @@ public final class FreezeCountdownGameState extends GameState implements Listene
         this.game.getPlayers().forEach((_, gamePlayer) ->
                 gamePlayer.validatePlayer().getAttribute(Attribute.MOVEMENT_SPEED).addTransientModifier(FREEZE_MODIFIER));
 
-        this.countdownTask = Bukkit.getScheduler().runTaskTimer(this.game.getPlugin(), new CountdownTask(10), 0, 20);
+        this.countdownTask = Bukkit.getScheduler().runTaskTimer(this.game.getPlugin(), new FreezeCountdownTask(10), 0, 20);
     }
 
     @Override
@@ -63,11 +63,11 @@ public final class FreezeCountdownGameState extends GameState implements Listene
         event.setTo(event.getFrom());
     }
 
-    private class CountdownTask implements Runnable {
+    private class FreezeCountdownTask implements Runnable {
 
         private int currentTime;
 
-        CountdownTask(int time) {
+        FreezeCountdownTask(int time) {
             this.currentTime = time;
         }
 

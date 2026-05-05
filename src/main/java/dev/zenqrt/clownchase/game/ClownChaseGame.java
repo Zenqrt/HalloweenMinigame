@@ -14,6 +14,7 @@ import dev.zenqrt.clownchase.maze.strategy.RecursiveDivisionStrategy;
 import dev.zenqrt.clownchase.maze.theme.MazeTheme;
 import dev.zenqrt.clownchase.utils.maze.MazeUtils;
 import dev.zenqrt.clownchase.world.generator.VoidGenerator;
+import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.math.Position;
 import net.kyori.adventure.audience.Audience;
 import org.bukkit.Bukkit;
@@ -22,6 +23,7 @@ import org.bukkit.World;
 import org.bukkit.WorldCreator;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class ClownChaseGame extends GameState {
 
@@ -32,7 +34,7 @@ public final class ClownChaseGame extends GameState {
     private World gameWorld;
     private boolean worldReady;
 
-    private final Map<ClownChasePlayer, Clown> clowns = new HashMap<>();
+    private final Map<UUID, Clown> playerToClown = new HashMap<>();
 
     private final Map<UUID, ClownChasePlayer> players = new HashMap<>();
     private final MazeTheme<?, ?> theme;
@@ -138,16 +140,46 @@ public final class ClownChaseGame extends GameState {
         return this.players.size() < this.gameSettings.maxPlayers();
     }
 
+    /**
+     * todo: Please remove this after replacing this method. The better method will be placed in MazeUtils
+     */
+    public BlockPosition findAvailableSpawn() {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+
+        int xMax = this.board.getDimensionX() * 6; // 6 is the scale. This should not be hardcoded like this TODO <--------
+        int yMax = this.board.getDimensionY() * 6;
+
+        BlockPosition position;
+
+        do {
+            position = Position.block(random.nextInt(xMax), 42, random.nextInt(yMax));
+        } while (!isSurroundingAreaOpen(this.gameWorld, position, 1, 1));
+
+        return position;
+    }
+
+    private static boolean isSurroundingAreaOpen(World world, BlockPosition origin, int xArea, int zArea) {
+        for (int x = -xArea; x <= xArea; x++) {
+            for (int z = -zArea; z <= zArea; z++) {
+                BlockPosition position = origin.offset(x, 0, z);
+
+                if (!world.getBlockAt(position.blockX(), position.blockY(), position.blockZ()).isEmpty())
+                    return false;
+            }
+        }
+        return true;
+    }
+
     public void assignClown(ClownChasePlayer gamePlayer, Clown clown) {
-        clowns.put(gamePlayer, clown);
+        playerToClown.put(gamePlayer.getUniqueId(), clown);
     }
 
     public void unassignClown(ClownChasePlayer gamePlayer) {
-        clowns.remove(gamePlayer);
+        playerToClown.remove(gamePlayer);
     }
 
-    public Map<ClownChasePlayer, Clown> getClowns() {
-        return Collections.unmodifiableMap(clowns);
+    public Map<UUID, Clown> getPlayerToClown() {
+        return Collections.unmodifiableMap(playerToClown);
     }
 
     public Map<UUID, ClownChasePlayer> getPlayers() {
