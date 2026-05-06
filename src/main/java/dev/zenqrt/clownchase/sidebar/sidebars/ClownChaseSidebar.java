@@ -43,15 +43,19 @@ public final class ClownChaseSidebar extends PacketSidebar {
     }
 
     private static Component firstPlaceScoreText(String username, int score) {
-        return Component.translatable(GAME_SCOREBOARD_FIRST_PLACE_SCORE, NamedTextColor.WHITE, Component.text(username), Component.text(score, NamedTextColor.AQUA));
+        return Component.translatable(GAME_SCOREBOARD_FIRST_PLACE_SCORE, NamedTextColor.WHITE, Component.text(username), candiesCollectedText(score));
     }
 
     private static Component secondPlaceScoreText(String username, int score) {
-        return Component.translatable(GAME_SCOREBOARD_SECOND_PLACE_SCORE, NamedTextColor.WHITE, Component.text(username), Component.text(score, NamedTextColor.AQUA));
+        return Component.translatable(GAME_SCOREBOARD_SECOND_PLACE_SCORE, NamedTextColor.WHITE, Component.text(username), candiesCollectedText(score));
     }
 
     private static Component thirdPlaceScoreText(String username, int score) {
-       return Component.translatable(GAME_SCOREBOARD_THIRD_PLACE_SCORE, NamedTextColor.WHITE, Component.text(username), Component.text(score, NamedTextColor.AQUA));
+       return Component.translatable(GAME_SCOREBOARD_THIRD_PLACE_SCORE, NamedTextColor.WHITE, Component.text(username), candiesCollectedText(score));
+    }
+
+    private static Component candiesCollectedText(int candies) {
+        return Component.text(candies, NamedTextColor.WHITE).append(Component.text(" ♧", NamedTextColor.GREEN));
     }
 
     private static Component clownDistanceText(int distance) {
