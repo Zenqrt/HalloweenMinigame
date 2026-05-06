@@ -7,7 +7,6 @@ import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.ClownChasePlayer;
 import dev.zenqrt.clownchase.game.GamePlayerData;
 import dev.zenqrt.clownchase.game.base.GameState;
-import dev.zenqrt.clownchase.sidebar.PacketSidebar;
 import dev.zenqrt.clownchase.sidebar.sidebars.ClownChaseSidebar;
 import dev.zenqrt.clownchase.utils.text.TextColorPresets;
 import dev.zenqrt.clownchase.utils.world.PositionUtils;
