@@ -170,6 +170,15 @@ public final class ClownChaseGame extends GameState {
         return Collections.unmodifiableMap(players);
     }
 
+    public List<LeaderboardEntry> getCandyLeaderboard(int limit) {
+        return this.players.entrySet().stream()
+                .map(entry -> new LeaderboardEntry(entry.getValue(), this.getPlayerData(entry.getKey())))
+                .sorted(Comparator.comparingInt(entry -> entry.playerData.getCandyCollected()))
+                .limit(limit)
+                .toList()
+                .reversed();
+    }
+
     public MazeTheme<?, ?> getTheme() {
         return theme;
     }
@@ -205,4 +214,6 @@ public final class ClownChaseGame extends GameState {
     public int getId() {
         return gameId;
     }
+
+    public record LeaderboardEntry(ClownChasePlayer gamePlayer, GamePlayerData playerData) {}
 }

@@ -12,6 +12,7 @@ import dev.zenqrt.clownchase.utils.text.TextColorPresets;
 import dev.zenqrt.clownchase.utils.world.PositionUtils;
 import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.math.Position;
+import it.unimi.dsi.fastutil.Pair;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.key.Key;
@@ -212,7 +213,10 @@ public final class ChaseGameState extends GameState implements Listener {
                                 entity -> ((CraftEntity) entity).getHandle() instanceof Candy)
                         .stream()
                         .map(entity -> (Candy) ((CraftEntity) entity).getHandle())
-                        .forEach(candy -> consumeCandy(candy, player, playerData));
+                        .forEach(candy -> {
+                            consumeCandy(candy, player, playerData);
+                            updateCandyLeaderboard();
+                        });
             }
         }
 
@@ -224,6 +228,32 @@ public final class ChaseGameState extends GameState implements Listener {
             player.playSound(CONSUME_SOUND, Sound.Emitter.self());
 
             ChaseGameState.this.spawnedCandies.remove(candy);
+        }
+
+        private void updateCandyLeaderboard() {
+            List<ClownChaseGame.LeaderboardEntry> leaderboard = ChaseGameState.this.game.getCandyLeaderboard(3);
+            Pair<String, Integer> firstPlaceDisplay = getPlaceDisplay(leaderboard, 1);
+            Pair<String, Integer> secondPlaceDisplay = getPlaceDisplay(leaderboard, 2);
+            Pair<String, Integer> thirdPlaceDisplay = getPlaceDisplay(leaderboard, 3);
+
+            for (UUID uuid : ChaseGameState.this.game.getPlayers().keySet()) {
+                ClownChaseSidebar sidebar = ChaseGameState.this.sidebarMap.get(uuid);
+
+                sidebar.setFirstPlaceScore(firstPlaceDisplay.first(), firstPlaceDisplay.second());
+                sidebar.setSecondPlaceScore(secondPlaceDisplay.first(), secondPlaceDisplay.second());
+                sidebar.setThirdPlaceScore(thirdPlaceDisplay.first(), thirdPlaceDisplay.second());
+            }
+        }
+
+        private Pair<String, Integer> getPlaceDisplay(List<ClownChaseGame.LeaderboardEntry> leaderboard, int place) {
+            int index = place - 1;
+
+            if (index >= leaderboard.size())
+                return Pair.of("...", 0);
+
+            ClownChaseGame.LeaderboardEntry entry = leaderboard.get(index);
+
+            return Pair.of(entry.gamePlayer().validatePlayer().getName(), entry.playerData().getCandyCollected());
         }
     }
 

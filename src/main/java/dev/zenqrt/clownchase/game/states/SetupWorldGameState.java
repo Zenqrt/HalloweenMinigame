@@ -49,5 +49,7 @@ public final class SetupWorldGameState extends GameState {
 
         this.game.setGameWorld(world);
         this.game.setWorldReady(true);
+
+        this.game.nextState();
     }
 }
