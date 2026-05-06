@@ -158,7 +158,7 @@ public final class GameCommand {
     private static int onGameStateNext(CommandSourceStack source, GameManager gameManager, int gameId) {
         gameManager.findGame(gameId).ifPresentOrElse(
                 game -> {
-                    game.nextState();
+                    game.getCurrentState().end();
                     source.getSender().sendMessage(Component.text("Switching to next state...", NamedTextColor.GRAY));
                 },
                 () -> source.getSender().sendMessage(Component.text("Invalid game id " + gameId + "!", TextColorPresets.ERROR)));

@@ -5,7 +5,7 @@ import dev.zenqrt.clownchase.entity.Clown;
 import dev.zenqrt.clownchase.event.events.GamePlayerJoinEvent;
 import dev.zenqrt.clownchase.exceptions.GameAlreadyFullException;
 import dev.zenqrt.clownchase.exceptions.GamePlayerAlreadyInGameException;
-import dev.zenqrt.clownchase.game.base.GameState;
+import dev.zenqrt.clownchase.game.base.GameStateSequence;
 import dev.zenqrt.clownchase.game.states.*;
 import dev.zenqrt.clownchase.maze.MazeBoard;
 import dev.zenqrt.clownchase.maze.strategy.RecursiveDivisionStrategy;
@@ -19,11 +19,9 @@ import org.bukkit.World;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class ClownChaseGame extends GameState {
+public final class ClownChaseGame extends GameStateSequence {
 
     private static final int MAZE_SCALE = 6;
-    private final List<GameState> states;
-    private int stateIndex;
 
     private World gameWorld;
     private boolean worldReady;
@@ -54,39 +52,6 @@ public final class ClownChaseGame extends GameState {
                 new ChaseGameState(this),
                 new AnnounceWinnerGameState(this, 10)
         );
-        this.stateIndex = 0;
-    }
-
-    @Override
-    protected void onStateStart() {
-        this.states.get(stateIndex).start();
-    }
-
-    @Override
-    protected void onStateEnd() {
-        this.states.get(stateIndex).end();
-    }
-
-    public void nextState() {
-        if (stateIndex + 1 >= states.size()) {
-            this.end();
-            return;
-        }
-
-        GameState currentState = states.get(stateIndex);
-        currentState.end();
-
-        states.get(++stateIndex).start();
-    }
-
-    public void previousState() {
-        if (stateIndex - 1 < 0)
-            throw new IndexOutOfBoundsException("state index below 0");
-
-        GameState currentState = states.get(stateIndex);
-        currentState.end();
-
-        states.get(--stateIndex).start();
     }
 
     public GamePlayerData getPlayerData(UUID uuid) {
@@ -198,10 +163,6 @@ public final class ClownChaseGame extends GameState {
 
     public void setWorldReady(boolean worldReady) {
         this.worldReady = worldReady;
-    }
-
-    public GameState getCurrentState() {
-        return this.states.get(this.stateIndex);
     }
 
     public GameSettings getGameSettings() {
