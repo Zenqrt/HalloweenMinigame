@@ -11,6 +11,7 @@ import dev.zenqrt.clownchase.utils.text.TextColorPresets;
 import dev.zenqrt.clownchase.utils.world.PositionUtils;
 import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.math.Position;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
@@ -44,11 +45,15 @@ public final class ChaseGameState extends GameState implements Listener {
     private static final String RESPAWN_COUNTDOWN_TIMER = "game.respawn.timer";
     private static final String RESPAWN_TITLE = "game.respawn.title";
     private static final String TIME_LEFT = "game.time_left";
+    private static final String CLOWN_BUFF = "game.clown_buff";
     private static final Sound DEATH_SOUND = Sound.sound(Key.key("minecraft:entity.zombie.death"), Sound.Source.MASTER, 1, 0);
     private static final Sound CONSUME_SOUND = Sound.sound(Key.key("minecraft:entity.player.burp"), Sound.Source.MASTER, 1, 1.5F);
+    private static final Sound CLOWN_BUFF_SOUND = Sound.sound(Key.key("minecraft:block.portal.travel"), Sound.Source.MASTER, 0.5F, 2);
 
     private final List<Candy> spawnedCandies = new ArrayList<>();
     private final SpawnCandyTask spawnCandyTask;
+
+    private float clownSpeedMultiplier;
 
     private final List<BukkitTask> tasks = new ArrayList<>();
     private final ClownChaseGame game;
@@ -56,6 +61,7 @@ public final class ChaseGameState extends GameState implements Listener {
     public ChaseGameState(ClownChaseGame game) {
         this.game = game;
         this.spawnCandyTask = new SpawnCandyTask(1, 3, 100);
+        this.clownSpeedMultiplier = 0;
     }
 
     @Override
@@ -137,13 +143,27 @@ public final class ChaseGameState extends GameState implements Listener {
 
         @Override
         public void run() {
+            Audience audience = ChaseGameState.this.game.audience();
+
             if (--this.currentTime <= 0) {
+                this.bossBar.removeViewer(audience);
                 ChaseGameState.this.game.nextState();
                 return;
             }
 
             this.bossBar.name(bossBarTitle(currentTime));
             this.bossBar.progress((float) this.currentTime / this.gameTime);
+
+            if (this.currentTime % (this.gameTime / 3) == 0) {
+                clownSpeedMultiplier += 0.12F;
+
+                audience.sendMessage(Component.translatable(CLOWN_BUFF, NamedTextColor.DARK_PURPLE).decorate(TextDecoration.ITALIC));
+                audience.playSound(CLOWN_BUFF_SOUND, Sound.Emitter.self());
+
+                for (Clown clown : ChaseGameState.this.game.getPlayerToClown().values()) {
+                    clown.setSpeedModifier(clownSpeedMultiplier);
+                }
+            }
         }
 
         private Component bossBarTitle(int timeSeconds) {
