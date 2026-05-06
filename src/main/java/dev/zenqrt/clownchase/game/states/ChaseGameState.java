@@ -117,7 +117,7 @@ public final class ChaseGameState extends GameState implements Listener {
                 .runTaskTimer(this.game.getPlugin(), 0, 20));
     }
 
-    private void respawnPlayer(Player player, Clown assignedClown) {
+    private void respawnPlayer(GamePlayerData playerData, Player player, Clown assignedClown) {
         BlockPosition spawn;
 
         do {
@@ -128,6 +128,8 @@ public final class ChaseGameState extends GameState implements Listener {
         player.setHealth(this.game.getGameSettings().maxHealth());
         player.removePotionEffect(PotionEffectType.BLINDNESS);
         player.setGameMode(GameMode.ADVENTURE);
+
+        playerData.setAlive(true);
     }
 
     private class GameTimerTask implements Runnable {
@@ -313,12 +315,14 @@ public final class ChaseGameState extends GameState implements Listener {
         @Override
         public void run() {
             if (--this.currentTime <= 0) {
+                GamePlayerData playerData = ChaseGameState.this.game.getPlayerData(this.player.getUniqueId());
+
                 this.player.showTitle(Title.title(
                         Component.translatable(RESPAWN_TITLE, NamedTextColor.YELLOW).decorate(TextDecoration.BOLD),
                         Component.empty(),
                         Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(1))
                 ));
-                respawnPlayer(this.player, this.clown);
+                respawnPlayer(playerData, this.player, this.clown);
 
                 this.cancel();
                 return;
