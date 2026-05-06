@@ -51,7 +51,8 @@ public final class ClownChaseGame extends GameState {
                 new SetupPlayersGameState(this),
                 new SpawnClownsGameState(this),
                 new FreezeCountdownGameState(this),
-                new ChaseGameState(this)
+                new ChaseGameState(this),
+                new AnnounceWinnerGameState(this, 10)
         );
         this.stateIndex = 0;
     }
@@ -158,8 +159,8 @@ public final class ClownChaseGame extends GameState {
         playerToClown.put(gamePlayer.getUniqueId(), clown);
     }
 
-    public void unassignClown(ClownChasePlayer gamePlayer) {
-        playerToClown.remove(gamePlayer);
+    public void clearClowns() {
+        playerToClown.clear();
     }
 
     public Map<UUID, Clown> getPlayerToClown() {

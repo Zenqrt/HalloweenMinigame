@@ -40,11 +40,11 @@ public class PacketSidebar {
     }
 
     public void addLine(String id, Component text) {
-        lines.add(new SidebarLine(id, PaperAdventure.asVanilla(text)));
+        this.lines.add(new SidebarLine(id, PaperAdventure.asVanilla(text)));
     }
 
     public void addEmptyLine() {
-        lines.add(new SidebarLine(UUID.randomUUID().toString(), net.minecraft.network.chat.Component.empty()));
+        this.lines.add(new SidebarLine(UUID.randomUUID().toString(), net.minecraft.network.chat.Component.empty()));
     }
 
     public void addViewer(ServerPlayer player) {
@@ -71,14 +71,19 @@ public class PacketSidebar {
         }
 
         player.connection.send(displayObjectivePacket);
-        viewers.add(player);
+        this.viewers.add(player);
     }
 
     public void removeViewer(ServerPlayer player) {
-        ClientboundSetObjectivePacket removeObjectivePacket = new ClientboundSetObjectivePacket(this.objective, 1);
+        ClientboundSetObjectivePacket removeObjectivePacket = createRemoveObjectivePacket();
 
         player.connection.send(removeObjectivePacket);
-        viewers.remove(player);
+        this.viewers.remove(player);
+    }
+
+    public void removeAllViewers() {
+        this.viewers.forEach(player -> player.connection.send(createRemoveObjectivePacket()));
+        this.viewers.clear();
     }
 
     public void updateLine(String id, Component text) {
@@ -86,6 +91,10 @@ public class PacketSidebar {
         team.setPlayerPrefix(PaperAdventure.asVanilla(text));
 
         ClientboundSetPlayerTeamPacket modifyTeamPacket = ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(team, false);
-        viewers.forEach(player -> player.connection.send(modifyTeamPacket));
+        this.viewers.forEach(player -> player.connection.send(modifyTeamPacket));
+    }
+
+    private ClientboundSetObjectivePacket createRemoveObjectivePacket() {
+        return new ClientboundSetObjectivePacket(this.objective, 1);
     }
 }

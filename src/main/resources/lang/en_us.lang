@@ -16,3 +16,7 @@ game.scoreboard.score_header=ᴛᴏᴘ ᴄᴀɴᴅɪᴇꜱ
 game.scoreboard.first_place_score=1. {0}: {1}
 game.scoreboard.second_place_score=2. {0}: {1}
 game.scoreboard.third_place_score=3. {0}: {1}
+game.leaderboard.header=Top Candies Collected
+game.leaderboard.place={0} {1} - {2}
+game.leaderboard.place_empty={0} ...
+game.game_over.title=GAME OVER!

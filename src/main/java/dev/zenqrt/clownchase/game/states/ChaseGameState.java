@@ -89,6 +89,15 @@ public final class ChaseGameState extends GameState implements Listener {
 
         tasks.forEach(BukkitTask::cancel);
         tasks.clear();
+
+        this.game.getPlayerToClown().values().forEach(clown -> clown.remove(Entity.RemovalReason.DISCARDED));
+        this.game.clearClowns();
+
+        this.spawnedCandies.forEach(candy -> candy.remove(Entity.RemovalReason.DISCARDED));
+        this.spawnedCandies.clear();
+
+        this.sidebarMap.forEach((_, sidebar) -> sidebar.removeAllViewers());
+        this.sidebarMap.clear();
     }
 
     @EventHandler
