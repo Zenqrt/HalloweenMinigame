@@ -11,6 +11,7 @@ import dev.zenqrt.clownchase.utils.text.TextColorPresets;
 import dev.zenqrt.clownchase.utils.world.PositionUtils;
 import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.math.Position;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
@@ -42,6 +43,7 @@ public final class ChaseGameState extends GameState implements Listener {
     private static final String DEATH_TITLE = "game.death.title";
     private static final String RESPAWN_COUNTDOWN_TIMER = "game.respawn.timer";
     private static final String RESPAWN_TITLE = "game.respawn.title";
+    private static final String TIME_LEFT = "game.time_left";
     private static final Sound DEATH_SOUND = Sound.sound(Key.key("minecraft:entity.zombie.death"), Sound.Source.MASTER, 1, 0);
     private static final Sound CONSUME_SOUND = Sound.sound(Key.key("minecraft:entity.player.burp"), Sound.Source.MASTER, 1, 1.5F);
 
@@ -63,6 +65,7 @@ public final class ChaseGameState extends GameState implements Listener {
 
         tasks.add(Bukkit.getScheduler().runTaskTimer(this.game.getPlugin(), spawnCandyTask, 0, 20));
         tasks.add(Bukkit.getScheduler().runTaskTimer(this.game.getPlugin(), new CandyCollectDetectionTask(), 0, 1));
+        tasks.add(Bukkit.getScheduler().runTaskTimer(this.game.getPlugin(), new GameTimerTask(this.game.getGameSettings().gameLength()), 0, 20));
     }
 
     @Override
@@ -112,6 +115,47 @@ public final class ChaseGameState extends GameState implements Listener {
         player.setGameMode(GameMode.ADVENTURE);
     }
 
+    private class GameTimerTask implements Runnable {
+
+        private int currentTime;
+        private final int gameTime;
+        private final BossBar bossBar;
+
+        GameTimerTask(int gameTime) {
+            this.gameTime = gameTime;
+            this.currentTime = gameTime;
+
+            this.bossBar = BossBar.bossBar(
+                    bossBarTitle(currentTime),
+                    1F,
+                    BossBar.Color.BLUE,
+                    BossBar.Overlay.NOTCHED_6
+            );
+
+            this.bossBar.addViewer(ChaseGameState.this.game.audience());
+        }
+
+        @Override
+        public void run() {
+            if (--this.currentTime <= 0) {
+                ChaseGameState.this.game.nextState();
+                return;
+            }
+
+            this.bossBar.name(bossBarTitle(currentTime));
+            this.bossBar.progress((float) this.currentTime / this.gameTime);
+        }
+
+        private Component bossBarTitle(int timeSeconds) {
+            int seconds = timeSeconds % 60;
+            int minutes = timeSeconds / 60;
+
+            Component timeLeft = Component.text(minutes + ":" + String.format("%02d", seconds), NamedTextColor.AQUA);
+
+            return Component.translatable(TIME_LEFT, NamedTextColor.YELLOW, timeLeft);
+        }
+    }
+
     private class CandyCollectDetectionTask implements Runnable {
 
         @Override
@@ -140,6 +184,7 @@ public final class ChaseGameState extends GameState implements Listener {
             candy.remove(Entity.RemovalReason.DISCARDED);
             playerData.addCandyCollected(1);
 
+            player.setLevel(playerData.getCandyCollected());
             player.playSound(CONSUME_SOUND, Sound.Emitter.self());
         }
     }

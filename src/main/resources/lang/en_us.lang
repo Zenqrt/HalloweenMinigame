@@ -9,3 +9,4 @@ game.start.title=RUN!
 game.death.title=YOU DIED!
 game.respawn.timer=ʀᴇꜱᴘᴀᴡɴɪɴɢ ɪɴ {0} ꜱᴇᴄᴏɴᴅꜱ...
 game.respawn.title=RESPAWNED!
+game.time_left={0} ⌚

@@ -1,6 +1,7 @@
 package dev.zenqrt.clownchase.game;
 
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.TitlePart;
 import org.bukkit.entity.Player;
@@ -48,6 +49,14 @@ public final class ClownChasePlayer implements Audience {
             return;
 
         this.player.sendTitlePart(part, value);
+    }
+
+    @Override
+    public void showBossBar(@NotNull BossBar bar) {
+        if (this.player == null)
+            return;
+
+        this.player.showBossBar(bar);
     }
 
     public void setPlayer(@Nullable Player player) {
