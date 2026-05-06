@@ -2,6 +2,7 @@ package dev.zenqrt.clownchase.game;
 
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.TitlePart;
 import org.bukkit.entity.Player;
@@ -57,6 +58,14 @@ public final class ClownChasePlayer implements Audience {
             return;
 
         this.player.showBossBar(bar);
+    }
+
+    @Override
+    public void playSound(@NotNull Sound sound, Sound.@NotNull Emitter emitter) {
+        if (this.player == null)
+            return;
+
+        this.player.playSound(sound, emitter);
     }
 
     public void setPlayer(@Nullable Player player) {
