@@ -4,7 +4,7 @@ import dev.zenqrt.clownchase.maze.theme.MazeTheme;
 import dev.zenqrt.clownchase.maze.theme.ground.MazeGroundDecoration;
 import dev.zenqrt.clownchase.maze.theme.wall.MazeWallDecoration;
 import dev.zenqrt.clownchase.maze.theme.wall.WallDirection;
-import dev.zenqrt.clownchase.world.generator.block.BlockBatch;
+import dev.zenqrt.clownchase.world.block.BlockBatch;
 import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.math.Position;
 import org.bukkit.World;

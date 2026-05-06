@@ -4,7 +4,6 @@ game.countdown.cancelled_not_enough_players=ɴᴏᴛ ᴇɴᴏᴜɢʜ ᴘʟᴀʏ�
 game.countdown.start_timer=ɢᴀᴍᴇ ꜱᴛᴀʀᴛꜱ ɪɴ {0} ꜱᴇᴄᴏɴᴅꜱ!
 game.countdown.move_timer=ʏᴏᴜ ᴄᴀɴ ᴍᴏᴠᴇ ɪɴ {0} ꜱᴇᴄᴏɴᴅꜱ!
 game.countdown.move_timer.title={0}
-game.countdown.move_timer.subtitle=Prepare to move!
 game.start.title=RUN!
 game.death.title=YOU DIED!
 game.respawn.timer=ʀᴇꜱᴘᴀᴡɴɪɴɢ ɪɴ {0} ꜱᴇᴄᴏɴᴅꜱ...

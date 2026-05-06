@@ -1,4 +1,4 @@
-package dev.zenqrt.clownchase.world.generator.block;
+package dev.zenqrt.clownchase.world.block;
 
 import io.papermc.paper.math.BlockPosition;
 import net.minecraft.core.BlockPos;

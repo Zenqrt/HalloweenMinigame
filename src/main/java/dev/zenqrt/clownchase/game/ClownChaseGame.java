@@ -8,26 +8,20 @@ import dev.zenqrt.clownchase.exceptions.GamePlayerAlreadyInGameException;
 import dev.zenqrt.clownchase.game.base.GameState;
 import dev.zenqrt.clownchase.game.states.*;
 import dev.zenqrt.clownchase.maze.MazeBoard;
-import dev.zenqrt.clownchase.maze.MazeBuilder;
-import dev.zenqrt.clownchase.maze.strategy.MazeGenerationStrategy;
 import dev.zenqrt.clownchase.maze.strategy.RecursiveDivisionStrategy;
 import dev.zenqrt.clownchase.maze.theme.MazeTheme;
-import dev.zenqrt.clownchase.utils.maze.MazeUtils;
-import dev.zenqrt.clownchase.world.generator.VoidGenerator;
 import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.math.Position;
 import net.kyori.adventure.audience.Audience;
 import org.bukkit.Bukkit;
-import org.bukkit.GameRules;
 import org.bukkit.World;
-import org.bukkit.WorldCreator;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class ClownChaseGame extends GameState {
 
-    private static final MazeGenerationStrategy MAZE_GENERATION_STRATEGY = new RecursiveDivisionStrategy();
+    private static final int MAZE_SCALE = 6;
     private final List<GameState> states;
     private int stateIndex;
 
@@ -52,6 +46,7 @@ public final class ClownChaseGame extends GameState {
         this.theme = theme;
 
         this.states = List.of(
+                new SetupWorldGameState(this, new RecursiveDivisionStrategy(), MAZE_SCALE),
                 new IntermissionGameState(this),
                 new SetupPlayersGameState(this),
                 new SpawnClownsGameState(this),
@@ -63,29 +58,6 @@ public final class ClownChaseGame extends GameState {
 
     @Override
     protected void onStateStart() {
-        // Generate world  -----------    TODO: Make world gen async if possible
-        this.gameWorld = WorldCreator.name("clown-chase_" + this.gameId)
-                .generator(new VoidGenerator())
-                .createWorld();
-
-        if (this.gameWorld == null)
-            throw new NullPointerException("gameWorld");
-
-        this.gameWorld.setAutoSave(false);
-        this.gameWorld.setGameRule(GameRules.SPAWN_MOBS, false);
-        this.gameWorld.setGameRule(GameRules.ADVANCE_TIME, false);
-        this.gameWorld.setGameRule(GameRules.ADVANCE_WEATHER, false);
-        this.gameWorld.setGameRule(GameRules.SPECTATORS_GENERATE_CHUNKS, false);
-        this.gameWorld.setGameRule(GameRules.FALL_DAMAGE, false);
-        this.gameWorld.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
-
-        // Generate maze
-        MAZE_GENERATION_STRATEGY.execute(this.board);
-
-        MazeUtils.printMaze(this.board);
-        MazeBuilder.constructMaze(this.board, this.theme, 6, this.gameWorld, Position.block(0, 42, 0));
-
-        this.worldReady = true;
         this.states.get(stateIndex).start();
     }
 
@@ -130,6 +102,7 @@ public final class ClownChaseGame extends GameState {
     }
 
     public void tryAddPlayer(ClownChasePlayer gamePlayer) {
+        // TODO: Instead of this, make a synchronous lock to prevent this issue in the first place
         if (this.players.containsKey(gamePlayer.getUniqueId()))
             throw new GamePlayerAlreadyInGameException(gamePlayer);
 
@@ -148,7 +121,7 @@ public final class ClownChaseGame extends GameState {
     }
 
     public boolean canPlayerJoin() {
-        return this.players.size() < this.gameSettings.maxPlayers();
+        return this.worldReady && this.players.size() < this.gameSettings.maxPlayers();
     }
 
     /**
@@ -157,8 +130,8 @@ public final class ClownChaseGame extends GameState {
     public BlockPosition findAvailableSpawn(int xRadius, int zRadius) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
 
-        int xMax = this.board.getDimensionX() * 6; // 6 is the scale. This should not be hardcoded like this TODO <--------
-        int yMax = this.board.getDimensionY() * 6;
+        int xMax = this.board.getDimensionX() * MAZE_SCALE;
+        int yMax = this.board.getDimensionY() * MAZE_SCALE;
 
         BlockPosition position;
 
@@ -197,12 +170,24 @@ public final class ClownChaseGame extends GameState {
         return Collections.unmodifiableMap(players);
     }
 
+    public MazeTheme<?, ?> getTheme() {
+        return theme;
+    }
+
     public MazeBoard getBoard() {
         return board;
     }
 
+    public void setGameWorld(World gameWorld) {
+        this.gameWorld = gameWorld;
+    }
+
     public World getGameWorld() {
         return gameWorld;
+    }
+
+    public void setWorldReady(boolean worldReady) {
+        this.worldReady = worldReady;
     }
 
     public GameState getCurrentState() {

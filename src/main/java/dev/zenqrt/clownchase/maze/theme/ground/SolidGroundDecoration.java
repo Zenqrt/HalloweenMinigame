@@ -1,6 +1,6 @@
 package dev.zenqrt.clownchase.maze.theme.ground;
 
-import dev.zenqrt.clownchase.world.generator.block.BlockBatch;
+import dev.zenqrt.clownchase.world.block.BlockBatch;
 import io.papermc.paper.math.BlockPosition;
 import org.bukkit.block.data.BlockData;
 

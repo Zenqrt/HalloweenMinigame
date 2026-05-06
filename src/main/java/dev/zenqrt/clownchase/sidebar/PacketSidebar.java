@@ -74,10 +74,6 @@ public class PacketSidebar {
         viewers.add(player);
     }
 
-    private String createEntryId(int index) {
-        return "§".repeat(index);
-    }
-
     public void removeViewer(ServerPlayer player) {
         ClientboundSetObjectivePacket removeObjectivePacket = new ClientboundSetObjectivePacket(this.objective, 1);
 

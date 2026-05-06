@@ -51,7 +51,7 @@ public final class ChaseGameState extends GameState implements Listener {
     private static final Sound CONSUME_SOUND = Sound.sound(Key.key("minecraft:entity.player.burp"), Sound.Source.MASTER, 1, 1.5F);
     private static final Sound CLOWN_BUFF_SOUND = Sound.sound(Key.key("minecraft:block.portal.travel"), Sound.Source.MASTER, 0.5F, 2);
 
-    private final List<Candy> spawnedCandies = new ArrayList<>();
+    private final List<Candy> spawnedCandies = new ArrayList<>(); // TODO: Change this to an int counter if saved candies aren't going to be used
     private final SpawnCandyTask spawnCandyTask;
 
     private float clownSpeedMultiplier;
@@ -64,7 +64,6 @@ public final class ChaseGameState extends GameState implements Listener {
         this.game = game;
         this.spawnCandyTask = new SpawnCandyTask(1, 3, 100);
         this.clownSpeedMultiplier = 0;
-
     }
 
     @Override
@@ -98,10 +97,10 @@ public final class ChaseGameState extends GameState implements Listener {
         if (!this.game.getPlayers().containsKey(player.getUniqueId()))
             return;
 
+        event.setCancelled(true);
+
         GamePlayerData playerData = this.game.getPlayerData(player.getUniqueId());
         playerData.setAlive(false);
-
-        event.setCancelled(true);
 
         player.setGameMode(GameMode.SPECTATOR);
         player.setFlySpeed(0);
@@ -223,6 +222,8 @@ public final class ChaseGameState extends GameState implements Listener {
 
             player.setLevel(playerData.getCandyCollected());
             player.playSound(CONSUME_SOUND, Sound.Emitter.self());
+
+            ChaseGameState.this.spawnedCandies.remove(candy);
         }
     }
 

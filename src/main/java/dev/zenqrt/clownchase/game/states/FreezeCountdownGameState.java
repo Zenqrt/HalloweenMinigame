@@ -24,7 +24,6 @@ public final class FreezeCountdownGameState extends GameState implements Listene
 
     private static final String MOVE_COUNTDOWN_TIMER = "game.countdown.move_timer";
     private static final String MOVE_COUNTDOWN_TIMER_TITLE = "game.countdown.move_timer.title";
-    private static final String MOVE_COUNTDOWN_TIMER_SUBTITLE = "game.countdown.move_timer.subtitle";
     private static final String GAME_START_TITLE = "game.start.title";
     private static final AttributeModifier FREEZE_MODIFIER = new AttributeModifier(NamespacedKey.minecraft("freeze"), 0, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
 
