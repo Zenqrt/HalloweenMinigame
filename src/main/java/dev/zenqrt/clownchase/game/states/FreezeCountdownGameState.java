@@ -17,6 +17,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.Scoreboard;
 
 import java.time.Duration;
 
@@ -27,6 +28,7 @@ public final class FreezeCountdownGameState extends GameState implements Listene
     private static final String MOVE_COUNTDOWN_TIMER_SUBTITLE = "game.countdown.move_timer.subtitle";
     private static final String GAME_START_TITLE = "game.start.title";
     private static final AttributeModifier FREEZE_MODIFIER = new AttributeModifier(NamespacedKey.minecraft("freeze"), 0, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
+
     private BukkitTask countdownTask;
     private final ClownChaseGame game;
 

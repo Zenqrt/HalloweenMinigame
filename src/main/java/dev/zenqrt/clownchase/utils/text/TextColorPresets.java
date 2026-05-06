@@ -10,6 +10,8 @@ public final class TextColorPresets {
     public static final TextColor USERNAME = NamedTextColor.YELLOW;
     public static final TextColor ERROR = NamedTextColor.RED;
 
+    public static final TextColor SCOREBOARD_TEXT = NamedTextColor.LIGHT_PURPLE;
+
     private TextColorPresets() {
     }
 

@@ -24,6 +24,8 @@ public final class SetupPlayersGameState extends GameState {
 
     @Override
     protected void onStateStart() {
+
+
         // FIXME: This should work but it doesn't because of the weird way the maze build was generated.
         // FIXME: To fix this, I have to redo MazeBuilder but I can't be bothered right now so I'll just use the legacy code for finding valid spawns
 //        List<BlockPosition> openCells = new ArrayList<>();

@@ -7,6 +7,8 @@ import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.ClownChasePlayer;
 import dev.zenqrt.clownchase.game.GamePlayerData;
 import dev.zenqrt.clownchase.game.base.GameState;
+import dev.zenqrt.clownchase.sidebar.PacketSidebar;
+import dev.zenqrt.clownchase.sidebar.sidebars.ClownChaseSidebar;
 import dev.zenqrt.clownchase.utils.text.TextColorPresets;
 import dev.zenqrt.clownchase.utils.world.PositionUtils;
 import io.papermc.paper.math.BlockPosition;
@@ -25,6 +27,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftEntity;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
@@ -36,8 +39,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public final class ChaseGameState extends GameState implements Listener {
 
@@ -56,18 +58,26 @@ public final class ChaseGameState extends GameState implements Listener {
     private float clownSpeedMultiplier;
 
     private final List<BukkitTask> tasks = new ArrayList<>();
+    private final Map<UUID, ClownChaseSidebar> sidebarMap = new HashMap<>();
     private final ClownChaseGame game;
 
     public ChaseGameState(ClownChaseGame game) {
         this.game = game;
         this.spawnCandyTask = new SpawnCandyTask(1, 3, 100);
         this.clownSpeedMultiplier = 0;
+
     }
 
     @Override
     protected void onStateStart() {
         Bukkit.getPluginManager().registerEvents(this, this.game.getPlugin());
         this.game.getPlayerToClown().forEach((_, clown) -> clown.setNoAi(false));
+        this.game.getPlayers().forEach((_, gamePlayer) -> {
+            ClownChaseSidebar sidebar = new ClownChaseSidebar();
+            sidebar.addViewer(((CraftPlayer) gamePlayer.validatePlayer()).getHandle());
+
+            this.sidebarMap.put(gamePlayer.getUniqueId(), sidebar);
+        });
 
         tasks.add(Bukkit.getScheduler().runTaskTimer(this.game.getPlugin(), spawnCandyTask, 0, 20));
         tasks.add(Bukkit.getScheduler().runTaskTimer(this.game.getPlugin(), new CandyCollectDetectionTask(), 0, 1));
@@ -153,6 +163,14 @@ public final class ChaseGameState extends GameState implements Listener {
 
             this.bossBar.name(bossBarTitle(currentTime));
             this.bossBar.progress((float) this.currentTime / this.gameTime);
+
+            for (ClownChasePlayer gamePlayer : ChaseGameState.this.game.getPlayers().values()) {
+                Player player = gamePlayer.validatePlayer();
+                Clown clown = ChaseGameState.this.game.getPlayerToClown().get(player.getUniqueId());
+
+                ClownChaseSidebar sidebar = ChaseGameState.this.sidebarMap.get(player.getUniqueId());
+                sidebar.setClownDistance((int) PositionUtils.distance(player.getLocation(), Position.fine(clown.getX(), clown.getY(), clown.getZ())));
+            }
 
             if (this.currentTime % (this.gameTime / 3) == 0) {
                 clownSpeedMultiplier += 0.12F;
