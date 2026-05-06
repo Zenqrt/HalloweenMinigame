@@ -39,16 +39,12 @@ public class PacketSidebar {
         );
     }
 
-    public PacketSidebar addLine(String id, Component text) {
+    public void addLine(String id, Component text) {
         lines.add(new SidebarLine(id, PaperAdventure.asVanilla(text)));
-
-        return this;
     }
 
-    public PacketSidebar addEmptyLine() {
+    public void addEmptyLine() {
         lines.add(new SidebarLine(UUID.randomUUID().toString(), net.minecraft.network.chat.Component.empty()));
-
-        return this;
     }
 
     public void addViewer(ServerPlayer player) {
