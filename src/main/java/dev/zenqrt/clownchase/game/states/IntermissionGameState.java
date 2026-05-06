@@ -67,6 +67,7 @@ public final class IntermissionGameState extends GameState implements Listener {
         HandlerList.unregisterAll(this);
 
         this.states.get(this.stateIndex).end();
+        this.game.nextState();
     }
 
     @EventHandler
