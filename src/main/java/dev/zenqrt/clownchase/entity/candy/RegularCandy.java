@@ -1,4 +1,4 @@
-package dev.zenqrt.clownchase.entity;
+package dev.zenqrt.clownchase.entity.candy;
 
 import net.minecraft.world.level.Level;
 

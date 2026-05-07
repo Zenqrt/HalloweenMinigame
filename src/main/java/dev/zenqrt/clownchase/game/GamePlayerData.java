@@ -2,6 +2,7 @@ package dev.zenqrt.clownchase.game;
 
 public final class GamePlayerData {
 
+    private boolean shielded;
     private int candyCollected;
     private boolean alive;
 
@@ -28,5 +29,13 @@ public final class GamePlayerData {
 
     public void setAlive(boolean alive) {
         this.alive = alive;
+    }
+
+    public void setShielded(boolean shielded) {
+        this.shielded = shielded;
+    }
+
+    public boolean isShielded() {
+        return shielded;
     }
 }

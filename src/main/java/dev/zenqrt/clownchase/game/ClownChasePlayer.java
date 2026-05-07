@@ -61,11 +61,27 @@ public final class ClownChasePlayer implements Audience {
     }
 
     @Override
+    public void hideBossBar(@NotNull BossBar bar) {
+        if (this.player == null)
+            return;
+
+        this.player.hideBossBar(bar);
+    }
+
+    @Override
     public void playSound(@NotNull Sound sound, Sound.@NotNull Emitter emitter) {
         if (this.player == null)
             return;
 
         this.player.playSound(sound, emitter);
+    }
+
+    @Override
+    public void playSound(@NotNull Sound sound, double x, double y, double z) {
+        if (this.player == null)
+            return;
+
+        this.player.playSound(sound, x, y, z);
     }
 
     public void setPlayer(@Nullable Player player) {

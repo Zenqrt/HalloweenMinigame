@@ -10,6 +10,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
@@ -32,7 +33,12 @@ public final class AnnounceWinnerGameState extends GameState {
 
     @Override
     protected void onStateStart() {
-        this.game.getPlayers().forEach((_, gamePlayer) -> gamePlayer.validatePlayer().setGameMode(GameMode.SPECTATOR));
+        this.game.getPlayers().forEach((_, gamePlayer) -> {
+            Player player = gamePlayer.validatePlayer();
+
+            player.setFlySpeed(0.2F);
+            player.setGameMode(GameMode.SPECTATOR);
+        });
 
         Audience audience = this.game.audience();
         List<ClownChaseGame.LeaderboardEntry> leaderboard = this.game.getCandyLeaderboard(3);

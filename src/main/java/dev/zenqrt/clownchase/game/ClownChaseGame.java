@@ -13,6 +13,8 @@ import dev.zenqrt.clownchase.maze.theme.MazeTheme;
 import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.math.Position;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 
@@ -21,6 +23,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public final class ClownChaseGame extends GameStateSequence {
 
+    private static final String KICK_GAME_SHUTDOWN = "server.kick.game_shutdown";
     private static final int MAZE_SCALE = 6;
 
     private World gameWorld;
@@ -50,8 +53,17 @@ public final class ClownChaseGame extends GameStateSequence {
                 new SpawnClownsGameState(this),
                 new FreezeCountdownGameState(this),
                 new ChaseGameState(this),
-                new AnnounceWinnerGameState(this, 10)
+                new AnnounceWinnerGameState(this, 200) // 10 seconds
         );
+    }
+
+    @Override
+    protected void onStateEnd() {
+        super.onStateEnd();
+
+        this.players.values().forEach(gamePlayer ->
+                gamePlayer.validatePlayer().kick(Component.translatable(KICK_GAME_SHUTDOWN, NamedTextColor.RED)));
+        this.players.clear();
     }
 
     public GamePlayerData getPlayerData(UUID uuid) {
