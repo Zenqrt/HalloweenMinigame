@@ -40,8 +40,6 @@ public final class PlayerActivityListeners implements Listener {
                 },
                 () -> event.getPlayer().kick()
         );
-
-
     }
 
     @EventHandler
