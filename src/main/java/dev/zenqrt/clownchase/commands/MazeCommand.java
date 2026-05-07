@@ -11,7 +11,7 @@ import org.bukkit.block.BlockType;
 public final class MazeCommand {
 
     public static void register(Commands commands) {
-        commands.register(Commands.literal("maze")
+        commands.register(Commands.literal("maze").requires(source -> source.getSender().isOp())
                 .then(Commands.argument("scale", IntegerArgumentType.integer())
                         .executes(context -> {
                             context.getSource().getSender().sendMessage("Generating...");

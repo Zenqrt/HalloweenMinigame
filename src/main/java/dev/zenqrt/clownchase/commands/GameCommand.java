@@ -22,7 +22,7 @@ public final class GameCommand {
 
     public static void register(Commands commands, GameManager gameManager) {
         commands.register(
-                Commands.literal("game")
+                Commands.literal("game").requires(source -> source.getSender().isOp())
                         .then(Commands.literal("create")
                                 .then(Commands.argument("game_time", IntegerArgumentType.integer(0))
                                         .then(Commands.argument("min_players", IntegerArgumentType.integer(0))
