@@ -8,10 +8,10 @@ import java.util.function.Function;
 
 public enum CandyType {
     REGULAR(90, RegularCandy::new),
-    SPEED(3, SpeedCandy::new),
-    REGEN(1, RegenCandy::new),
+    SPEED(30, SpeedCandy::new),
+    REGEN(50, RegenCandy::new),
     SHIELD(2, ShieldCandy::new),
-    STUN_BALL(2, level -> new ItemCandy(level, CustomItems.STUN_BALL)),
+    STUN_BALL(20, level -> new ItemCandy(level, CustomItems.STUN_BALL)),
     DAMAGE_TRAP(2, level -> new ItemCandy(level, CustomItems.DAMAGE_TRAP))
     ;
 

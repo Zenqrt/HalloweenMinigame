@@ -3,6 +3,8 @@ package dev.zenqrt.clownchase.entity.candy;
 import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.GamePlayerData;
 import dev.zenqrt.clownchase.utils.text.Messages;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.world.level.Level;
@@ -12,6 +14,7 @@ import org.bukkit.entity.Player;
 public final class RegenCandy extends Candy {
 
     private static final String CONSUME_CANDY_REGEN = "game.consume_candy.regen";
+    private static final Sound CONSUME_SOUND = Sound.sound(Key.key("minecraft:block.amethyst_block.resonate"), Sound.Source.MASTER, 10F, 1);
 
     private static final String TEXTURES = "ewogICJ0aW1lc3RhbXAiIDogMTYzNTExMTMxNTAwOSwKICAicHJvZmlsZUlkIiA6ICI5NDA5NDM2ZDVmYjE0NjA3ODI3OTU3YTY4MWZiMGU1MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJNYXhCWmlnIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzE3NzUyYmRjY2FkNmE0Njc4YjZlYWE1OTIzNzM4YWE2M2QwYjc1MTcxODAzMjkyMTZmMGFhMzRmZWI1NWViIgogICAgfQogIH0KfQ==";
     private static final int REGEN_AMOUNT = 2;
@@ -33,6 +36,7 @@ public final class RegenCandy extends Candy {
                 .location(player.getLocation())
                 .spawn();
 
+        player.playSound(CONSUME_SOUND, Sound.Emitter.self());
         player.sendMessage(Messages.consumeSpecialCandy(Component.translatable(CONSUME_CANDY_REGEN, NamedTextColor.YELLOW,
                 Component.text(REGEN_AMOUNT / 2 + "❤", NamedTextColor.RED))));
     }
