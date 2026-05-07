@@ -1,6 +1,7 @@
 package dev.zenqrt.clownchase.sidebar.sidebars;
 
 import dev.zenqrt.clownchase.sidebar.PacketSidebar;
+import dev.zenqrt.clownchase.utils.text.Messages;
 import dev.zenqrt.clownchase.utils.text.TextColorPresets;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -43,19 +44,15 @@ public final class ClownChaseSidebar extends PacketSidebar {
     }
 
     private static Component firstPlaceScoreText(String username, int score) {
-        return Component.translatable(GAME_SCOREBOARD_FIRST_PLACE_SCORE, NamedTextColor.WHITE, Component.text(username), candiesCollectedText(score));
+        return Component.translatable(GAME_SCOREBOARD_FIRST_PLACE_SCORE, NamedTextColor.WHITE, Component.text(username), Messages.candyText(score));
     }
 
     private static Component secondPlaceScoreText(String username, int score) {
-        return Component.translatable(GAME_SCOREBOARD_SECOND_PLACE_SCORE, NamedTextColor.WHITE, Component.text(username), candiesCollectedText(score));
+        return Component.translatable(GAME_SCOREBOARD_SECOND_PLACE_SCORE, NamedTextColor.WHITE, Component.text(username), Messages.candyText(score));
     }
 
     private static Component thirdPlaceScoreText(String username, int score) {
-       return Component.translatable(GAME_SCOREBOARD_THIRD_PLACE_SCORE, NamedTextColor.WHITE, Component.text(username), candiesCollectedText(score));
-    }
-
-    private static Component candiesCollectedText(int candies) {
-        return Component.text(candies, NamedTextColor.WHITE).append(Component.text(" ♧", NamedTextColor.GREEN));
+       return Component.translatable(GAME_SCOREBOARD_THIRD_PLACE_SCORE, NamedTextColor.WHITE, Component.text(username), Messages.candyText(score));
     }
 
     private static Component clownDistanceText(int distance) {

@@ -93,7 +93,7 @@ public final class GameCommand {
         } else {
             ClownChasePlayer gamePlayer = gamePlayerOptional.get();
 
-            game.tryAddPlayer(gamePlayer);
+            game.addPlayer(gamePlayer);
             gamePlayer.setGame(game);
 
             source.getSender().sendMessage(Component.text("Joined game " + game.getId(), NamedTextColor.GREEN));

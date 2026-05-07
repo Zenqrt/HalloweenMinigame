@@ -65,7 +65,7 @@ public final class PlayerActivityListeners implements Listener {
                     gamePlayer.setPlayer(event.getPlayer());
 
                     if (gamePlayer.getGame() != null)
-                        Bukkit.getScheduler().runTask(this.plugin, () -> gamePlayer.getGame().tryAddPlayer(gamePlayer));
+                        Bukkit.getScheduler().runTask(this.plugin, () -> gamePlayer.getGame().addPlayer(gamePlayer));
                 },
                 () -> event.getPlayer().kick()
         );

@@ -20,7 +20,7 @@ public final class GamePlayerData {
     }
 
     public void removeCandyCollected(int candy) {
-        candyCollected -= candy;
+        candyCollected = Math.max(0, candyCollected - candy);
     }
 
     public boolean isAlive() {

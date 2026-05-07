@@ -1,13 +1,17 @@
 package dev.zenqrt.clownchase.game.states;
 
 import dev.zenqrt.clownchase.candy.CandyType;
-import dev.zenqrt.clownchase.entity.candy.Candy;
 import dev.zenqrt.clownchase.entity.Clown;
+import dev.zenqrt.clownchase.entity.candy.Candy;
 import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.ClownChasePlayer;
 import dev.zenqrt.clownchase.game.GamePlayerData;
 import dev.zenqrt.clownchase.game.base.GameState;
+import dev.zenqrt.clownchase.item.CustomItem;
+import dev.zenqrt.clownchase.item.items.DamageTrapItem;
+import dev.zenqrt.clownchase.item.items.StunBallItem;
 import dev.zenqrt.clownchase.sidebar.sidebars.ClownChaseSidebar;
+import dev.zenqrt.clownchase.utils.text.Messages;
 import dev.zenqrt.clownchase.utils.text.TextColorPresets;
 import dev.zenqrt.clownchase.utils.world.PositionUtils;
 import io.papermc.paper.math.BlockPosition;
@@ -48,20 +52,22 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class ChaseGameState extends GameState implements Listener {
 
     private static final String DEATH_TITLE = "game.death.title";
+    private static final String DEATH_MESSAGE = "game.death.message";
     private static final String RESPAWN_COUNTDOWN_TIMER = "game.respawn.timer";
     private static final String RESPAWN_TITLE = "game.respawn.title";
     private static final String TIME_LEFT = "game.time_left";
     private static final String CLOWN_BUFF = "game.clown_buff";
+    private static final String SHIELD_BROKEN = "game.shield.broken";
     private static final Sound DEATH_SOUND = Sound.sound(Key.key("minecraft:entity.zombie.death"), Sound.Source.MASTER, 1, 0);
     private static final Sound CONSUME_SOUND = Sound.sound(Key.key("minecraft:entity.player.burp"), Sound.Source.MASTER, 1, 1.5F);
     private static final Sound CLOWN_BUFF_SOUND = Sound.sound(Key.key("minecraft:block.portal.travel"), Sound.Source.MASTER, 0.5F, 2);
-    private static final Sound SHIELD_BREAK_SOUND = Sound.sound(Key.key("minecraft:entity.zombie.break_wooden_door"), Sound.Source.MASTER, 0.75F, 1.2F);
 
-    private final List<Candy> spawnedCandies = new ArrayList<>(); // TODO: Change this to an int counter if saved candies aren't going to be used
+    private final List<Candy> spawnedCandies = new ArrayList<>();
     private final SpawnCandyTask spawnCandyTask;
 
     private float clownSpeedMultiplier;
 
+    private final List<CustomItem.Listeners> itemListeners;
     private final List<BukkitTask> tasks = new ArrayList<>();
     private final Map<UUID, ClownChaseSidebar> sidebarMap = new HashMap<>();
     private final ClownChaseGame game;
@@ -70,11 +76,18 @@ public final class ChaseGameState extends GameState implements Listener {
         this.game = game;
         this.spawnCandyTask = new SpawnCandyTask(1, 3, 100);
         this.clownSpeedMultiplier = 0;
+
+        this.itemListeners = List.of(
+                new StunBallItem.Listeners(game),
+                new DamageTrapItem.Listeners(game, this)
+        );
     }
 
     @Override
     protected void onStateStart() {
         Bukkit.getPluginManager().registerEvents(this, this.game.getPlugin());
+        this.itemListeners.forEach(item -> Bukkit.getPluginManager().registerEvents(item, this.game.getPlugin()));
+
         this.game.getPlayerToClown().forEach((_, clown) -> clown.setNoAi(false));
         this.game.getPlayers().forEach((_, gamePlayer) -> {
             ClownChaseSidebar sidebar = new ClownChaseSidebar();
@@ -91,9 +104,11 @@ public final class ChaseGameState extends GameState implements Listener {
     @Override
     protected void onStateEnd() {
         HandlerList.unregisterAll(this);
+        this.itemListeners.forEach(CustomItem.Listeners::unregister);
 
         tasks.forEach(BukkitTask::cancel);
         tasks.clear();
+
 
         this.game.getPlayerToClown().values().forEach(clown -> clown.remove(Entity.RemovalReason.DISCARDED));
         this.game.clearClowns();
@@ -107,7 +122,7 @@ public final class ChaseGameState extends GameState implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getEntity() instanceof Player player) || !this.game.getPlayers().containsKey(player.getUniqueId()))
+        if (!(event.getEntity() instanceof Player player) || !this.game.hasPlayer(player.getUniqueId()))
             return;
 
         if (!(event.getDamager() instanceof Husk))
@@ -115,13 +130,12 @@ public final class ChaseGameState extends GameState implements Listener {
 
         GamePlayerData playerData = this.game.getPlayerData(player.getUniqueId());
 
-        if (playerData.isShielded()) {
-            event.setDamage(0);
-            playerData.setShielded(false);
+        if (!playerData.isShielded())
+            return;
 
-            this.game.audience().playSound(SHIELD_BREAK_SOUND, player.getX(), player.getY(), player.getZ());
-            player.sendMessage(Component.translatable("game.shield.broken", NamedTextColor.RED).decorate(TextDecoration.BOLD));
-        }
+        event.setDamage(0);
+        this.game.breakShield(player, playerData);
+        player.sendMessage(Component.translatable(SHIELD_BROKEN, NamedTextColor.RED).decorate(TextDecoration.BOLD));
     }
 
     @EventHandler
@@ -134,7 +148,10 @@ public final class ChaseGameState extends GameState implements Listener {
         event.setCancelled(true);
 
         GamePlayerData playerData = this.game.getPlayerData(player.getUniqueId());
+        int candyLoss = playerData.getCandyCollected() / 4;
+
         playerData.setAlive(false);
+        playerData.removeCandyCollected(candyLoss);
 
         player.setGameMode(GameMode.SPECTATOR);
         player.setFlySpeed(0);
@@ -148,6 +165,12 @@ public final class ChaseGameState extends GameState implements Listener {
 
         tasks.add(new RespawnCountdownTask(5, player, this.game.getPlayerToClown().get(player.getUniqueId()))
                 .runTaskTimer(this.game.getPlugin(), 0, 20));
+
+        this.game.audience().sendMessage(
+                Component.text("☠ ", NamedTextColor.RED)
+                        .append(Component.translatable(DEATH_MESSAGE, NamedTextColor.GRAY,
+                                Messages.username(player), Messages.candyText(candyLoss)))
+        );
     }
 
     private void respawnPlayer(GamePlayerData playerData, Player player, Clown assignedClown) {
@@ -160,9 +183,35 @@ public final class ChaseGameState extends GameState implements Listener {
         player.teleport(spawn.toLocation(this.game.getGameWorld()));
         player.setHealth(this.game.getGameSettings().maxHealth());
         player.removePotionEffect(PotionEffectType.BLINDNESS);
-        player.setGameMode(GameMode.ADVENTURE);
+        player.setGameMode(GameMode.SURVIVAL);
 
         playerData.setAlive(true);
+    }
+
+    public void updateCandyLeaderboard() {
+        List<ClownChaseGame.LeaderboardEntry> leaderboard = ChaseGameState.this.game.getCandyLeaderboard(3);
+        Pair<String, Integer> firstPlaceDisplay = getPlaceDisplay(leaderboard, 1);
+        Pair<String, Integer> secondPlaceDisplay = getPlaceDisplay(leaderboard, 2);
+        Pair<String, Integer> thirdPlaceDisplay = getPlaceDisplay(leaderboard, 3);
+
+        for (UUID uuid : ChaseGameState.this.game.getPlayers().keySet()) {
+            ClownChaseSidebar sidebar = ChaseGameState.this.sidebarMap.get(uuid);
+
+            sidebar.setFirstPlaceScore(firstPlaceDisplay.first(), firstPlaceDisplay.second());
+            sidebar.setSecondPlaceScore(secondPlaceDisplay.first(), secondPlaceDisplay.second());
+            sidebar.setThirdPlaceScore(thirdPlaceDisplay.first(), thirdPlaceDisplay.second());
+        }
+    }
+
+    private Pair<String, Integer> getPlaceDisplay(List<ClownChaseGame.LeaderboardEntry> leaderboard, int place) {
+        int index = place - 1;
+
+        if (index >= leaderboard.size())
+            return Pair.of("...", 0);
+
+        ClownChaseGame.LeaderboardEntry entry = leaderboard.get(index);
+
+        return Pair.of(entry.gamePlayer().validatePlayer().getName(), entry.playerData().getCandyCollected());
     }
 
     private class GameTimerTask implements Runnable {
@@ -234,10 +283,6 @@ public final class ChaseGameState extends GameState implements Listener {
             }
         }
 
-        private void upgradeShieldDisplay() {
-
-        }
-
         private void upgradeClownSpeed(Audience audience) {
             clownSpeedMultiplier += 0.12F;
 
@@ -298,31 +343,6 @@ public final class ChaseGameState extends GameState implements Listener {
             ChaseGameState.this.spawnedCandies.remove(candy);
         }
 
-        private void updateCandyLeaderboard() {
-            List<ClownChaseGame.LeaderboardEntry> leaderboard = ChaseGameState.this.game.getCandyLeaderboard(3);
-            Pair<String, Integer> firstPlaceDisplay = getPlaceDisplay(leaderboard, 1);
-            Pair<String, Integer> secondPlaceDisplay = getPlaceDisplay(leaderboard, 2);
-            Pair<String, Integer> thirdPlaceDisplay = getPlaceDisplay(leaderboard, 3);
-
-            for (UUID uuid : ChaseGameState.this.game.getPlayers().keySet()) {
-                ClownChaseSidebar sidebar = ChaseGameState.this.sidebarMap.get(uuid);
-
-                sidebar.setFirstPlaceScore(firstPlaceDisplay.first(), firstPlaceDisplay.second());
-                sidebar.setSecondPlaceScore(secondPlaceDisplay.first(), secondPlaceDisplay.second());
-                sidebar.setThirdPlaceScore(thirdPlaceDisplay.first(), thirdPlaceDisplay.second());
-            }
-        }
-
-        private Pair<String, Integer> getPlaceDisplay(List<ClownChaseGame.LeaderboardEntry> leaderboard, int place) {
-            int index = place - 1;
-
-            if (index >= leaderboard.size())
-                return Pair.of("...", 0);
-
-            ClownChaseGame.LeaderboardEntry entry = leaderboard.get(index);
-
-            return Pair.of(entry.gamePlayer().validatePlayer().getName(), entry.playerData().getCandyCollected());
-        }
     }
 
     private class SpawnCandyTask implements Runnable {

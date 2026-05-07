@@ -18,7 +18,6 @@ public class GameStateSequence extends GameState {
     }
 
     public final void nextState() {
-        System.out.println("Next state");
         if (this.stateIndex + 1 >= this.states.size()) {
             this.end();
             return;

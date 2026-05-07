@@ -51,7 +51,7 @@ public final class SetupPlayersGameState extends GameState {
 
             // Set player properties
             player.teleport(spawn.toLocation(this.game.getGameWorld()));
-            player.setGameMode(GameMode.ADVENTURE);
+            player.setGameMode(GameMode.SURVIVAL);
             player.setFoodLevel(20);
             player.setHealth(this.game.getGameSettings().maxHealth());
             player.setExp(0);

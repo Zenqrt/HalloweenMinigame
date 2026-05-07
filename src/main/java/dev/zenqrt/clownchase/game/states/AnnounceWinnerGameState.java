@@ -2,6 +2,7 @@ package dev.zenqrt.clownchase.game.states;
 
 import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.base.GameState;
+import dev.zenqrt.clownchase.utils.text.Messages;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -85,7 +86,7 @@ public final class AnnounceWinnerGameState extends GameState {
                 LEADERBOARD_PLACE, NamedTextColor.DARK_GRAY,
                 placementNumber,
                 Component.text(entry.gamePlayer().validatePlayer().getName(), NamedTextColor.WHITE),
-                Component.text(entry.playerData().getCandyCollected(), NamedTextColor.WHITE).append(Component.text(" ♧", NamedTextColor.GREEN)));
+                Messages.candyText(entry.playerData().getCandyCollected()));
     }
 
     private static Component separator() {

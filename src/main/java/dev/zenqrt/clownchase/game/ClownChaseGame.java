@@ -3,20 +3,23 @@ package dev.zenqrt.clownchase.game;
 import dev.zenqrt.clownchase.ClownChasePlugin;
 import dev.zenqrt.clownchase.entity.Clown;
 import dev.zenqrt.clownchase.event.events.GamePlayerJoinEvent;
-import dev.zenqrt.clownchase.exceptions.GameAlreadyFullException;
-import dev.zenqrt.clownchase.exceptions.GamePlayerAlreadyInGameException;
 import dev.zenqrt.clownchase.game.base.GameStateSequence;
 import dev.zenqrt.clownchase.game.states.*;
 import dev.zenqrt.clownchase.maze.MazeBoard;
 import dev.zenqrt.clownchase.maze.strategy.RecursiveDivisionStrategy;
 import dev.zenqrt.clownchase.maze.theme.MazeTheme;
+import dev.zenqrt.clownchase.utils.text.Messages;
+import dev.zenqrt.clownchase.utils.text.TextColorPresets;
 import io.papermc.paper.math.BlockPosition;
 import io.papermc.paper.math.Position;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -24,6 +27,10 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class ClownChaseGame extends GameStateSequence {
 
     private static final String KICK_GAME_SHUTDOWN = "server.kick.game_shutdown";
+    private static final String CONSUME_CANDY_SHIELD_ALREADY = "game.consume_candy.shield.already";
+    private static final String CONSUME_CANDY_SHIELD = "game.consume_candy.shield";
+    private static final Sound SHIELD_EQUIP_SOUND = Sound.sound(Key.key("minecraft:item.trident.return"), Sound.Source.MASTER, 1, 1.1F);
+    private static final Sound SHIELD_BREAK_SOUND = Sound.sound(Key.key("minecraft:block.glass.break"), Sound.Source.MASTER, 0.75F, 0.8F);
     private static final int MAZE_SCALE = 6;
 
     private World gameWorld;
@@ -79,14 +86,8 @@ public final class ClownChaseGame extends GameStateSequence {
         return Audience.audience(players.values());
     }
 
-    public void tryAddPlayer(ClownChasePlayer gamePlayer) {
+    public void addPlayer(ClownChasePlayer gamePlayer) {
         // TODO: Instead of this, make a synchronous lock to prevent this issue in the first place
-        if (this.players.containsKey(gamePlayer.getUniqueId()))
-            throw new GamePlayerAlreadyInGameException(gamePlayer);
-
-        if (this.players.size() >= this.gameSettings.maxPlayers())
-            throw new GameAlreadyFullException(this);
-
         this.players.put(gamePlayer.getUniqueId(), gamePlayer);
         this.playerData.put(gamePlayer.getUniqueId(), new GamePlayerData());
 
@@ -100,6 +101,23 @@ public final class ClownChaseGame extends GameStateSequence {
 
     public boolean canPlayerJoin() {
         return this.worldReady && this.players.size() < this.gameSettings.maxPlayers();
+    }
+
+    public void grantShield(Player player, GamePlayerData playerData) {
+        if (playerData.isShielded()) {
+            player.sendMessage(Messages.consumeSpecialCandy(Component.translatable(CONSUME_CANDY_SHIELD_ALREADY)));
+            return;
+        }
+
+        playerData.setShielded(true);
+        player.playSound(SHIELD_EQUIP_SOUND, Sound.Emitter.self());
+        player.sendMessage(Messages.consumeSpecialCandy(Component.translatable(CONSUME_CANDY_SHIELD, Component.text("1 hit", TextColorPresets.NUMBER))));
+    }
+
+    public void breakShield(Player player, GamePlayerData playerData) {
+        playerData.setShielded(false);
+
+        this.audience().playSound(SHIELD_BREAK_SOUND, player.getX(), player.getY(), player.getZ());
     }
 
     /**
@@ -146,6 +164,10 @@ public final class ClownChaseGame extends GameStateSequence {
 
     public Map<UUID, ClownChasePlayer> getPlayers() {
         return Collections.unmodifiableMap(players);
+    }
+
+    public boolean hasPlayer(UUID uuid) {
+        return this.players.containsKey(uuid);
     }
 
     public List<LeaderboardEntry> getCandyLeaderboard(int limit) {

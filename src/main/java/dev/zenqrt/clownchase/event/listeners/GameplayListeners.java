@@ -1,9 +1,11 @@
 package dev.zenqrt.clownchase.event.listeners;
 
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 
@@ -11,7 +13,7 @@ public final class GameplayListeners implements Listener {
 
     @EventHandler
     public void onFoodLevelChange(FoodLevelChangeEvent event) {
-        event.setFoodLevel(20);;
+        event.setFoodLevel(20);
     }
 
     @EventHandler
@@ -25,5 +27,10 @@ public final class GameplayListeners implements Listener {
         }
 
         event.setDamage(2);
+    }
+
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        event.setCancelled(event.getPlayer().getGameMode() != GameMode.CREATIVE);
     }
 }
