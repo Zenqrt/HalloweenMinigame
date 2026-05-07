@@ -63,7 +63,7 @@ public final class GameManager {
     }
 
     public void removePlayer(ClownChasePlayer gamePlayer) {
-        players.remove(gamePlayer.getPlayer().getUniqueId());
+        players.remove(gamePlayer.getUniqueId());
 
         if (gamePlayer.getGame() != null)
             gamePlayer.getGame().removePlayer(gamePlayer);

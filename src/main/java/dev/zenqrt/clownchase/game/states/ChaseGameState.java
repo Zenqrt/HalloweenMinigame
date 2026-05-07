@@ -153,6 +153,8 @@ public final class ChaseGameState extends GameState implements Listener {
         playerData.setAlive(false);
         playerData.removeCandyCollected(candyLoss);
 
+        updateCandyLeaderboard();
+
         player.setGameMode(GameMode.SPECTATOR);
         player.setFlySpeed(0);
         player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 1000, 1, true, false, false));
@@ -184,6 +186,7 @@ public final class ChaseGameState extends GameState implements Listener {
         player.setHealth(this.game.getGameSettings().maxHealth());
         player.removePotionEffect(PotionEffectType.BLINDNESS);
         player.setGameMode(GameMode.SURVIVAL);
+        player.getInventory().clear();
 
         playerData.setAlive(true);
     }

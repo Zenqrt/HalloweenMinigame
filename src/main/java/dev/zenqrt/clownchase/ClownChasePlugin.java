@@ -5,7 +5,6 @@ import dev.zenqrt.clownchase.commands.MazeCommand;
 import dev.zenqrt.clownchase.event.listeners.GameplayListeners;
 import dev.zenqrt.clownchase.event.listeners.PlayerActivityListeners;
 import dev.zenqrt.clownchase.game.GameManager;
-import dev.zenqrt.clownchase.game.GameSettings;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.translation.GlobalTranslator;
@@ -28,7 +27,6 @@ public final class ClownChasePlugin extends JavaPlugin {
         registerTranslations(ClownChasePlugin.class.getClassLoader().getResourceAsStream("lang/en_us.lang"));
 
         gameManager = new GameManager(this);
-        gameManager.createGame(new GameSettings(2, 12, 120, 6)).start();
 
         Bukkit.getPluginManager().registerEvents(new PlayerActivityListeners(this, gameManager), this);
         Bukkit.getPluginManager().registerEvents(new GameplayListeners(), this);

@@ -56,6 +56,7 @@ public final class SetupPlayersGameState extends GameState {
             player.setHealth(this.game.getGameSettings().maxHealth());
             player.setExp(0);
             player.setLevel(0);
+            player.getInventory().clear();
 
             AttributeInstance movementSpeed = Objects.requireNonNull(player.getAttribute(Attribute.MOVEMENT_SPEED), "movementSpeed");
             movementSpeed.addTransientModifier(SPEED_MODIFIER);
