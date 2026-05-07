@@ -4,6 +4,8 @@ import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.base.GameState;
 import dev.zenqrt.clownchase.utils.text.Messages;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -23,6 +25,7 @@ public final class AnnounceWinnerGameState extends GameState {
     private static final String LEADERBOARD_PLACE = "game.leaderboard.place";
     private static final String LEADERBOARD_PLACE_EMPTY = "game.leaderboard.place_empty";
     private static final String GAME_OVER_TITLE = "game.game_over.title";
+    private static final Sound GAME_OVER_SOUND = Sound.sound(Key.key("minecraft:item.trident.return"), Sound.Source.MASTER, 1, 0);
     private BukkitTask nextStateTask;
     private final int admirationTime;
     private final ClownChaseGame game;
@@ -45,6 +48,7 @@ public final class AnnounceWinnerGameState extends GameState {
         List<ClownChaseGame.LeaderboardEntry> leaderboard = this.game.getCandyLeaderboard(3);
 
         audience.sendMessage(leaderboardMessage(leaderboard));
+        audience.playSound(GAME_OVER_SOUND, Sound.Emitter.self());
         audience.showTitle(Title.title(
                 Component.translatable(GAME_OVER_TITLE, NamedTextColor.RED).decorate(TextDecoration.BOLD),
                 Component.empty(),

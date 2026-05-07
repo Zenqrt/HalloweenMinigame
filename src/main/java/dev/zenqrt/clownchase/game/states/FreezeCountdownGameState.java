@@ -4,6 +4,8 @@ import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.base.GameState;
 import dev.zenqrt.clownchase.utils.text.TextColorPresets;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -25,6 +27,8 @@ public final class FreezeCountdownGameState extends GameState implements Listene
     private static final String MOVE_COUNTDOWN_TIMER = "game.countdown.move_timer";
     private static final String MOVE_COUNTDOWN_TIMER_TITLE = "game.countdown.move_timer.title";
     private static final String GAME_START_TITLE = "game.start.title";
+    private static final Sound COUNTDOWN_TICK_SOUND = Sound.sound(Key.key("minecraft:block.note_block.hat"), Sound.Source.MASTER, 1, 1);
+    private static final Sound GAME_START_SOUND = Sound.sound(Key.key("minecraft:entity.wither.spawn"), Sound.Source.MASTER, 1, 0.6F);
     private static final AttributeModifier FREEZE_MODIFIER = new AttributeModifier(NamespacedKey.minecraft("freeze"), 0, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
 
     private BukkitTask countdownTask;
@@ -76,6 +80,7 @@ public final class FreezeCountdownGameState extends GameState implements Listene
             Audience players = FreezeCountdownGameState.this.game.audience();
 
             if (--currentTime <= 0) {
+                players.playSound(GAME_START_SOUND, Sound.Emitter.self());
                 players.showTitle(Title.title(
                         Component.translatable(GAME_START_TITLE, NamedTextColor.RED).decorate(TextDecoration.BOLD),
                         Component.empty(),
@@ -90,6 +95,7 @@ public final class FreezeCountdownGameState extends GameState implements Listene
             );
 
             if (currentTime <= 5) {
+                players.playSound(COUNTDOWN_TICK_SOUND, Sound.Emitter.self());
                 players.showTitle(Title.title(
                         Component.translatable(MOVE_COUNTDOWN_TIMER_TITLE, TextColorPresets.NUMBER, Component.text(currentTime)).decorate(TextDecoration.BOLD),
                         Component.empty(),
