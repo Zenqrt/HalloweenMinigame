@@ -10,6 +10,8 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.minecraft.world.level.Level;
 import org.bukkit.Color;
 import org.bukkit.Particle;
@@ -18,16 +20,16 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
+public final class SpeedCandy extends SpecialCandy {
 
-public final class SpeedCandy extends Candy {
-
+    private static final String CANDY_TITLE = "game.candy.speed.title";
     private static final String CONSUME_CANDY_SPEED = "game.consume_candy.speed";
 
     private static final String TEXTURES = "ewogICJ0aW1lc3RhbXAiIDogMTYzNTExMTMxNTAwOSwKICAicHJvZmlsZUlkIiA6ICI5NDA5NDM2ZDVmYjE0NjA3ODI3OTU3YTY4MWZiMGU1MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJNYXhCWmlnIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzI1NDI1NzU0MjMyNDZmYWE3M2EzNzYzZTFiNDZkY2ZhM2Y0NmVkYjliMTVhY2IwYmMxMTkwMTQ2ZWUxOWQiCiAgICB9CiAgfQp9";
     private static final int DURATION = 100;  // 5 seconds
 
     public SpeedCandy(Level level) {
-        super(level, TEXTURES);
+        super(level, Component.translatable(CANDY_TITLE, TextColor.color(0x91E0FF)).decorate(TextDecoration.BOLD), TEXTURES);
     }
 
     @Override

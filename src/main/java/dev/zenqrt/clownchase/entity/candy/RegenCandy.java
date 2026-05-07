@@ -7,12 +7,15 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.minecraft.world.level.Level;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 
-public final class RegenCandy extends Candy {
+public final class RegenCandy extends SpecialCandy {
 
+    private static final String CANDY_TITLE = "game.candy.regen.title";
     private static final String CONSUME_CANDY_REGEN = "game.consume_candy.regen";
     private static final Sound CONSUME_SOUND = Sound.sound(Key.key("minecraft:block.amethyst_block.resonate"), Sound.Source.MASTER, 10F, 1);
 
@@ -20,7 +23,7 @@ public final class RegenCandy extends Candy {
     private static final int REGEN_AMOUNT = 2;
 
     public RegenCandy(Level level) {
-        super(level, TEXTURES);
+        super(level, Component.translatable(CANDY_TITLE, TextColor.color(0xFFA3DE)).decorate(TextDecoration.BOLD), TEXTURES);
     }
 
     @Override
