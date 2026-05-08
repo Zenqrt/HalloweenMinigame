@@ -5,7 +5,6 @@ import dev.zenqrt.clownchase.game.base.GameState;
 import dev.zenqrt.clownchase.map.MapManager;
 import dev.zenqrt.clownchase.maze.MazeBuilder;
 import dev.zenqrt.clownchase.maze.strategy.MazeGenerationStrategy;
-import dev.zenqrt.clownchase.utils.maze.MazeUtils;
 import io.papermc.paper.math.Position;
 import org.bukkit.World;
 
@@ -29,7 +28,6 @@ public final class SetupWorldGameState extends GameState {
 
         this.game.getBoard().populate(generationStrategy);
 
-        MazeUtils.printMaze(this.game.getBoard());
         MazeBuilder.constructMaze(this.game.getBoard(), this.game.getTheme(), mazeScale, world, Position.block(0, 42, 0));
 
         this.game.setGameWorld(world);
