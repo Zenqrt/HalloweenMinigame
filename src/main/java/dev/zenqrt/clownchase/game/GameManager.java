@@ -24,7 +24,7 @@ public final class GameManager {
     public ClownChaseGame createGame(GameSettings settings) {
         int gameId = nextGameId.incrementAndGet();
 
-        ClownChaseGame game = new ClownChaseGame(gameId, this.plugin, new SolidMazeTheme(6, 4, 5, BlockType.BLACK_CONCRETE.createBlockData(), BlockType.WHITE_CONCRETE.createBlockData()), settings);
+        ClownChaseGame game = new ClownChaseGame(gameId, this, this.plugin, new SolidMazeTheme(6, 4, 5, BlockType.BLACK_CONCRETE.createBlockData(), BlockType.WHITE_CONCRETE.createBlockData()), settings);
         games.put(gameId, game);
 
         return game;

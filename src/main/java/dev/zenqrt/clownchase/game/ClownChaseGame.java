@@ -44,10 +44,12 @@ public final class ClownChaseGame extends GameStateSequence {
     private final MazeBoard board;
     private final GameSettings gameSettings;
     private final ClownChasePlugin plugin;
+    private final GameManager gameManager;
     private final int gameId;
 
-    public ClownChaseGame(int gameId, ClownChasePlugin plugin, MazeTheme<?, ?> theme, GameSettings gameSettings) {
+    public ClownChaseGame(int gameId, GameManager gameManager, ClownChasePlugin plugin, MazeTheme<?, ?> theme, GameSettings gameSettings) {
         this.gameId = gameId;
+        this.gameManager = gameManager;
         this.plugin = plugin;
         this.gameSettings = gameSettings;
         this.board = new MazeBoard(16, 16);
@@ -71,6 +73,8 @@ public final class ClownChaseGame extends GameStateSequence {
         this.players.values().forEach(gamePlayer ->
                 gamePlayer.validatePlayer().kick(Component.translatable(KICK_GAME_SHUTDOWN, NamedTextColor.RED)));
         this.players.clear();
+
+        this.gameManager.deleteGame(gameId);
     }
 
     public GamePlayerData getPlayerData(UUID uuid) {
