@@ -1,6 +1,7 @@
 package dev.zenqrt.clownchase.game;
 
 import dev.zenqrt.clownchase.ClownChasePlugin;
+import dev.zenqrt.clownchase.map.MapManager;
 import dev.zenqrt.clownchase.maze.theme.SolidMazeTheme;
 import org.bukkit.block.BlockType;
 import org.bukkit.entity.Player;
@@ -14,17 +15,19 @@ public final class GameManager {
     private final Map<UUID, ClownChasePlayer> players = new HashMap<>();
     private final Map<Integer, ClownChaseGame> games = new HashMap<>();
     private final AtomicInteger nextGameId;
+    private final MapManager mapManager;
     private final ClownChasePlugin plugin;
 
-    public GameManager(ClownChasePlugin plugin) {
+    public GameManager(ClownChasePlugin plugin, MapManager mapManager) {
         this.plugin = plugin;
+        this.mapManager = mapManager;
         this.nextGameId = new AtomicInteger(0);
     }
 
     public ClownChaseGame createGame(GameSettings settings) {
         int gameId = nextGameId.incrementAndGet();
 
-        ClownChaseGame game = new ClownChaseGame(gameId, this, this.plugin, new SolidMazeTheme(6, 4, 5, BlockType.BLACK_CONCRETE.createBlockData(), BlockType.WHITE_CONCRETE.createBlockData()), settings);
+        ClownChaseGame game = new ClownChaseGame(gameId, this, this.mapManager, this.plugin, new SolidMazeTheme(6, 4, 5, BlockType.BLACK_CONCRETE.createBlockData(), BlockType.WHITE_CONCRETE.createBlockData()), settings);
         games.put(gameId, game);
 
         return game;

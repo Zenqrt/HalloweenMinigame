@@ -31,6 +31,10 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
+tasks.jar {
+    destinationDirectory.set(file("C:\\Users\\craft\\Documents\\Minecraft Servers\\26.1.2 Server\\plugins"))
+}
+
 tasks.test {
     useJUnitPlatform()
 }

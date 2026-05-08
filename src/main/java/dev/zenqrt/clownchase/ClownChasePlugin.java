@@ -5,11 +5,14 @@ import dev.zenqrt.clownchase.commands.MazeCommand;
 import dev.zenqrt.clownchase.event.listeners.GameplayListeners;
 import dev.zenqrt.clownchase.event.listeners.PlayerActivityListeners;
 import dev.zenqrt.clownchase.game.GameManager;
+import dev.zenqrt.clownchase.map.MapManager;
+import dev.zenqrt.clownchase.utils.player.PlayerUtils;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationStore;
 import org.bukkit.Bukkit;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
@@ -20,13 +23,14 @@ import java.util.Locale;
 
 public final class ClownChasePlugin extends JavaPlugin {
 
-    private static GameManager gameManager;
+    private static MapManager mapManager;
 
     @Override
     public void onEnable() {
         registerTranslations(ClownChasePlugin.class.getClassLoader().getResourceAsStream("lang/en_us.lang"));
 
-        gameManager = new GameManager(this);
+        mapManager = new MapManager();
+        GameManager gameManager = new GameManager(this, mapManager);
 
         Bukkit.getPluginManager().registerEvents(new PlayerActivityListeners(this, gameManager), this);
         Bukkit.getPluginManager().registerEvents(new GameplayListeners(), this);
@@ -35,7 +39,12 @@ public final class ClownChasePlugin extends JavaPlugin {
             GameCommand.register(commands.registrar(), gameManager);
             MazeCommand.register(commands.registrar());
         });
+    }
 
+    @Override
+    public void onDisable() {
+        Bukkit.getOnlinePlayers().forEach(player -> PlayerUtils.forceRemove(player, EntityRemoveEvent.Cause.UNLOAD));
+        mapManager.deleteAllGameWorlds();
     }
 
     private static void registerTranslations(InputStream langStream) {

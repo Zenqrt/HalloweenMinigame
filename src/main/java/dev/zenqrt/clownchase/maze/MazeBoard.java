@@ -1,11 +1,17 @@
 package dev.zenqrt.clownchase.maze;
 
+import dev.zenqrt.clownchase.maze.strategy.MazeGenerationStrategy;
+
 public final class MazeBoard {
 
     private final int[][] board;
 
     public MazeBoard(int dimX, int dimY) {
         this.board = new int[dimY][dimX];
+    }
+
+    public void populate(MazeGenerationStrategy strategy) {
+        strategy.execute(this);
     }
 
     public void setBlock(int x, int y, int wallDirection) {

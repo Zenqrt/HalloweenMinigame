@@ -5,6 +5,7 @@ import dev.zenqrt.clownchase.entity.Clown;
 import dev.zenqrt.clownchase.event.events.GamePlayerJoinEvent;
 import dev.zenqrt.clownchase.game.base.GameStateSequence;
 import dev.zenqrt.clownchase.game.states.*;
+import dev.zenqrt.clownchase.map.MapManager;
 import dev.zenqrt.clownchase.maze.MazeBoard;
 import dev.zenqrt.clownchase.maze.strategy.RecursiveDivisionStrategy;
 import dev.zenqrt.clownchase.maze.theme.MazeTheme;
@@ -20,6 +21,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -44,19 +46,21 @@ public final class ClownChaseGame extends GameStateSequence {
     private final MazeBoard board;
     private final GameSettings gameSettings;
     private final ClownChasePlugin plugin;
+    private final MapManager mapManager;
     private final GameManager gameManager;
     private final int gameId;
 
-    public ClownChaseGame(int gameId, GameManager gameManager, ClownChasePlugin plugin, MazeTheme<?, ?> theme, GameSettings gameSettings) {
+    public ClownChaseGame(int gameId, GameManager gameManager, MapManager mapManager, ClownChasePlugin plugin, MazeTheme<?, ?> theme, GameSettings gameSettings) {
         this.gameId = gameId;
         this.gameManager = gameManager;
+        this.mapManager = mapManager;
         this.plugin = plugin;
         this.gameSettings = gameSettings;
         this.board = new MazeBoard(16, 16);
         this.theme = theme;
 
         this.states = List.of(
-                new SetupWorldGameState(this, new RecursiveDivisionStrategy(), MAZE_SCALE),
+                new SetupWorldGameState(this, this.mapManager, new RecursiveDivisionStrategy(), MAZE_SCALE),
                 new IntermissionGameState(this),
                 new SetupPlayersGameState(this),
                 new SpawnClownsGameState(this),
@@ -75,6 +79,22 @@ public final class ClownChaseGame extends GameStateSequence {
         this.players.clear();
 
         this.gameManager.deleteGame(gameId);
+        tryDeleteGameWorld();
+    }
+
+    private void tryDeleteGameWorld() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    ClownChaseGame.this.mapManager.deleteGameWorld(gameId, gameWorld);
+                    this.cancel();
+                } catch (RuntimeException ex) {
+                    ClownChaseGame.this.plugin.getSLF4JLogger().error("Failed to delete game world '{}': {}\nRetrying...", gameWorld.getName(), ex.getMessage());
+                }
+
+            }
+        }.runTaskTimer(this.plugin, 20, 40);
     }
 
     public GamePlayerData getPlayerData(UUID uuid) {
