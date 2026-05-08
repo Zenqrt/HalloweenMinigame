@@ -21,6 +21,11 @@ public final class WaitingGameState extends GameState implements Listener {
 
     @Override
     protected void onStateStart() {
+        if (hasEnoughPlayers()) {
+            this.parent.nextState();
+            return;
+        }
+
         Bukkit.getPluginManager().registerEvents(this, this.game.getPlugin());
     }
 
@@ -34,9 +39,13 @@ public final class WaitingGameState extends GameState implements Listener {
         if (event.getGame() != this.game)
             return;
 
-        if (this.game.getPlayers().size() < this.game.getGameSettings().minPlayers())
+        if (!hasEnoughPlayers())
             return;
 
         this.parent.nextState();
+    }
+
+    private boolean hasEnoughPlayers() {
+        return this.game.getPlayers().size() >= this.game.getGameSettings().minPlayers();
     }
 }

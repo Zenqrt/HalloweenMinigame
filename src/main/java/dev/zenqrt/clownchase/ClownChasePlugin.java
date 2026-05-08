@@ -29,7 +29,7 @@ public final class ClownChasePlugin extends JavaPlugin {
     public void onEnable() {
         registerTranslations(ClownChasePlugin.class.getClassLoader().getResourceAsStream("lang/en_us.lang"));
 
-        mapManager = new MapManager();
+        mapManager = new MapManager(this);
         GameManager gameManager = new GameManager(this, mapManager);
 
         Bukkit.getPluginManager().registerEvents(new PlayerActivityListeners(this, gameManager), this);
