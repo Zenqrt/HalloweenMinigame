@@ -66,7 +66,8 @@ public final class ClownChaseGame extends GameStateSequence {
                 new SpawnClownsGameState(this),
                 new FreezeCountdownGameState(this),
                 new ChaseGameState(this),
-                new AnnounceWinnerGameState(this, 200) // 10 seconds
+                new AnnounceWinnerGameState(this, 200), // 10 seconds
+                new TeleportPlayersToLobbyGameState(this, plugin.getLobbySpawn())
         );
     }
 
@@ -121,6 +122,10 @@ public final class ClownChaseGame extends GameStateSequence {
 
     public boolean removePlayer(ClownChasePlayer gamePlayer) {
         return this.players.remove(gamePlayer.getUniqueId(), gamePlayer) || this.playerData.remove(gamePlayer.getUniqueId()) != null;
+    }
+
+    public boolean removePlayer(UUID uuid) {
+        return this.players.remove(uuid) != null;
     }
 
     public boolean canPlayerJoin() {

@@ -32,6 +32,7 @@ public final class MapManager {
         String worldName = "clown-chase_" + gameId;
         AtomicBoolean doneCopying = new AtomicBoolean(false);
 
+        // Copy world
         Bukkit.getAsyncScheduler().runNow(this.plugin, _ -> {
             try {
                 MyFileUtils.copyResourceFolder("worlds/empty", WORLDS_DIR.resolve(worldName));
@@ -41,6 +42,7 @@ public final class MapManager {
             }
         });
 
+        // Wait for copy to be done
         Bukkit.getScheduler().runTaskTimer(this.plugin, task -> {
             if (!doneCopying.get())
                 return;

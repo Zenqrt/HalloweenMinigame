@@ -3,6 +3,7 @@ package dev.zenqrt.clownchase.event.listeners;
 import dev.zenqrt.clownchase.ClownChasePlugin;
 import dev.zenqrt.clownchase.game.ClownChasePlayer;
 import dev.zenqrt.clownchase.game.GameManager;
+import io.papermc.paper.event.player.AsyncPlayerSpawnLocationEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -28,6 +29,11 @@ public final class PlayerActivityListeners implements Listener {
     }
 
     @EventHandler
+    public void onSpawn(AsyncPlayerSpawnLocationEvent event) {
+        event.setSpawnLocation(this.plugin.getLobbySpawn());
+    }
+
+    @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         event.joinMessage(null);
 
@@ -37,6 +43,7 @@ public final class PlayerActivityListeners implements Listener {
 
                     if (gamePlayer.getGame() != null)
                         Bukkit.getScheduler().runTask(this.plugin, () -> gamePlayer.getGame().addPlayer(gamePlayer));
+
                 },
                 () -> event.getPlayer().kick()
         );

@@ -11,6 +11,7 @@ import dev.zenqrt.clownchase.item.CustomItem;
 import dev.zenqrt.clownchase.item.items.DamageTrapItem;
 import dev.zenqrt.clownchase.item.items.StunBallItem;
 import dev.zenqrt.clownchase.sidebar.sidebars.ClownChaseSidebar;
+import dev.zenqrt.clownchase.utils.attribute.GameAttributeModifiers;
 import dev.zenqrt.clownchase.utils.text.Messages;
 import dev.zenqrt.clownchase.utils.text.TextColorPresets;
 import dev.zenqrt.clownchase.utils.world.PositionUtils;
@@ -29,6 +30,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftEntity;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
@@ -109,8 +112,19 @@ public final class ChaseGameState extends GameState implements Listener {
         tasks.forEach(BukkitTask::cancel);
         tasks.clear();
 
+        this.game.getPlayers().forEach((_, gamePlayer) -> {
+            Player player = gamePlayer.validatePlayer();
 
-        this.game.getPlayerToClown().values().forEach(clown -> clown.remove(Entity.RemovalReason.DISCARDED));
+            AttributeInstance movementSpeed = Objects.requireNonNull(player.getAttribute(Attribute.MOVEMENT_SPEED), "movementSpeed");
+            AttributeInstance maxHealth = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH), "maxHealth");
+
+            movementSpeed.removeModifier(GameAttributeModifiers.SPEED_KEY);
+            maxHealth.removeModifier(GameAttributeModifiers.MAX_HEALTH_KEY);
+
+            player.setHealth(maxHealth.getValue());
+        });
+
+        this.game.getPlayerToClown().forEach((_, clown) -> clown.remove(Entity.RemovalReason.DISCARDED));
         this.game.clearClowns();
 
         this.spawnedCandies.forEach(candy -> candy.remove(Entity.RemovalReason.DISCARDED));

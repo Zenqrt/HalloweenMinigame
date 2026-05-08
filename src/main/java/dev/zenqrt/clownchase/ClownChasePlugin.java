@@ -12,6 +12,7 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationStore;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -45,6 +46,10 @@ public final class ClownChasePlugin extends JavaPlugin {
     public void onDisable() {
         Bukkit.getOnlinePlayers().forEach(player -> PlayerUtils.forceRemove(player, EntityRemoveEvent.Cause.UNLOAD));
         mapManager.deleteAllGameWorlds();
+    }
+
+    public Location getLobbySpawn() {
+        return this.getServer().getRespawnWorld().getSpawnLocation().toCenterLocation();
     }
 
     private static void registerTranslations(InputStream langStream) {
