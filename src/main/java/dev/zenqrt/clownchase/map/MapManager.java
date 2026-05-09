@@ -85,6 +85,7 @@ public final class MapManager {
         );
 
         world.setAutoSave(false);
+        world.setTime(map.time());
         world.setGameRule(GameRules.RANDOM_TICK_SPEED, 0);
         world.setGameRule(GameRules.SPAWN_MOBS, false);
         world.setGameRule(GameRules.ADVANCE_TIME, false);
