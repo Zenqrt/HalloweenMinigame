@@ -5,6 +5,7 @@ import dev.zenqrt.clownchase.entity.Clown;
 import dev.zenqrt.clownchase.event.events.GamePlayerJoinEvent;
 import dev.zenqrt.clownchase.game.base.GameStateSequence;
 import dev.zenqrt.clownchase.game.states.*;
+import dev.zenqrt.clownchase.map.ClownChaseMap;
 import dev.zenqrt.clownchase.map.MapManager;
 import dev.zenqrt.clownchase.maze.MazeBoard;
 import dev.zenqrt.clownchase.maze.strategy.RecursiveDivisionStrategy;
@@ -39,10 +40,10 @@ public final class ClownChaseGame extends GameStateSequence {
     private boolean worldReady;
 
     private final Map<UUID, Clown> playerToClown = new HashMap<>();
-
     private final Map<UUID, GamePlayerData> playerData = new HashMap<>();
     private final Map<UUID, ClownChasePlayer> players = new HashMap<>();
-    private final MazeTheme<?, ?> theme;
+
+    private ClownChaseMap map;
     private final MazeBoard board;
     private final GameSettings gameSettings;
     private final ClownChasePlugin plugin;
@@ -50,14 +51,14 @@ public final class ClownChaseGame extends GameStateSequence {
     private final GameManager gameManager;
     private final int gameId;
 
-    public ClownChaseGame(int gameId, GameManager gameManager, MapManager mapManager, ClownChasePlugin plugin, MazeTheme<?, ?> theme, GameSettings gameSettings) {
+    public ClownChaseGame(int gameId, GameManager gameManager, MapManager mapManager, ClownChaseMap map, ClownChasePlugin plugin, GameSettings gameSettings) {
         this.gameId = gameId;
         this.gameManager = gameManager;
         this.mapManager = mapManager;
+        this.map = map;
         this.plugin = plugin;
         this.gameSettings = gameSettings;
         this.board = new MazeBoard(16, 16);
-        this.theme = theme;
 
         this.states = List.of(
                 new SetupWorldGameState(this, this.mapManager, new RecursiveDivisionStrategy(), MAZE_SCALE),
@@ -209,7 +210,11 @@ public final class ClownChaseGame extends GameStateSequence {
     }
 
     public MazeTheme<?, ?> getTheme() {
-        return theme;
+        return map.mazeTheme();
+    }
+
+    public ClownChaseMap getMap() {
+        return map;
     }
 
     public MazeBoard getBoard() {

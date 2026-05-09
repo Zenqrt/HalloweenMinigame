@@ -1,30 +1,37 @@
 package dev.zenqrt.clownchase.maze.theme.wall;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import dev.zenqrt.clownchase.maze.theme.MixtureDecoration;
 import dev.zenqrt.clownchase.world.block.BlockBatch;
 import io.papermc.paper.math.BlockPosition;
 import org.bukkit.Bukkit;
-import org.bukkit.block.data.BlockData;
 
-public final class SolidWallDecoration implements MazeWallDecoration {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
-    public static SolidWallDecoration fromJson(JsonObject jsonObject) {
-        BlockData blockData = Bukkit.createBlockData(jsonObject.get("block").getAsString());
+public record MixtureWallDecoration(List<DecorationEntry> decorationEntries, int length, int width, int height) implements MazeWallDecoration, MixtureDecoration {
+
+    public static MixtureWallDecoration fromJson(JsonObject jsonObject) {
+        JsonArray jsonArray = jsonObject.getAsJsonArray("blocks");
+        List<DecorationEntry> decorationEntries = new ArrayList<>();
+
+        for (JsonElement element : jsonArray) {
+            JsonObject elementObject = element.getAsJsonObject();
+
+            decorationEntries.add(new DecorationEntry(
+                    Bukkit.createBlockData(elementObject.get("block").getAsString()),
+                    elementObject.get("weight").getAsInt()
+            ));
+        }
+
         int length = jsonObject.get("length").getAsInt();
         int width = jsonObject.get("width").getAsInt();
         int height = jsonObject.get("height").getAsInt();
 
-        return new SolidWallDecoration(blockData, length, width, height);
-    }
-
-    private final BlockData blockData;
-    private final int length, width, height;
-
-    public SolidWallDecoration(BlockData blockData, int length, int width, int height) {
-        this.blockData = blockData;
-        this.length = length;
-        this.width = width;
-        this.height = height;
+        return new MixtureWallDecoration(decorationEntries, length, width, height);
     }
 
     @Override
@@ -38,10 +45,12 @@ public final class SolidWallDecoration implements MazeWallDecoration {
     }
 
     private void createVerticalWall(BlockBatch batch, BlockPosition position) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+
         for (int x = 0; x < width; x++) {
             for (int z = 0; z < length; z++) {
                 for (int y = 0; y < height; y++) {
-                    batch.setBlock(position.offset(x, y, z), blockData);
+                    batch.setBlock(position.offset(x, y, z), chooseBlockData(random));
                 }
             }
         }
@@ -58,10 +67,12 @@ public final class SolidWallDecoration implements MazeWallDecoration {
     }
 
     private void createHorizontalWall(BlockBatch batch, BlockPosition position) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+
         for (int x = 0; x < length; x++) {
             for (int z = 0; z < width; z++) {
                 for (int y = 0; y < height; y++) {
-                    batch.setBlock(position.offset(x, y, z), blockData);
+                    batch.setBlock(position.offset(x, y, z), chooseBlockData(random));
                 }
             }
         }

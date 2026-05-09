@@ -1,25 +1,38 @@
 package dev.zenqrt.clownchase.map;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import dev.zenqrt.clownchase.ClownChasePlugin;
-import dev.zenqrt.clownchase.utils.file.MyFileUtils;
-import io.papermc.paper.math.Position;
+import dev.zenqrt.clownchase.data.serializers.BiomeSerializer;
+import dev.zenqrt.clownchase.data.serializers.MazeThemeSerializer;
+import dev.zenqrt.clownchase.maze.theme.MazeTheme;
+import dev.zenqrt.clownchase.utils.world.GameWorldUtils;
+import dev.zenqrt.clownchase.world.biome.CustomBiomeProvider;
 import org.apache.commons.io.FileUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRules;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import org.bukkit.block.Biome;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public final class MapManager {
 
-    private static final Path WORLDS_DIR = Bukkit.getWorldContainer().toPath().resolve("world/dimensions/minecraft");
+    private static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(Biome.class, new BiomeSerializer())
+            .registerTypeAdapter(MazeTheme.class, new MazeThemeSerializer())
+            .create();
 
+    private final Map<String, ClownChaseMap> maps = new HashMap<>();
     private final Map<Integer, World> gameWorlds = new HashMap<>();
     private final ClownChasePlugin plugin;
 
@@ -27,52 +40,64 @@ public final class MapManager {
         this.plugin = plugin;
     }
 
-    // This is not fully async. Everything but world creation is async
-    public void createGameWorldAsync(int gameId, Consumer<World> onDone) {
-        String worldName = "clown-chase_" + gameId;
-        AtomicBoolean doneCopying = new AtomicBoolean(false);
+    public void loadMaps(Path directoryPath) {
+        try (Stream<Path> files = Files.list(directoryPath)) {
+            files.filter(Files::isRegularFile)
+                    .filter(path -> path.toString().endsWith(".json"))
+                    .forEach(path -> {
+                        try (Reader reader = Files.newBufferedReader(path)) {
+                            ClownChaseMap map = GSON.fromJson(reader, ClownChaseMap.class);
+                            String mapId = path.getFileName().toString().replaceAll(".json", "");
 
-        // Copy world
-        Bukkit.getAsyncScheduler().runNow(this.plugin, _ -> {
-            try {
-                MyFileUtils.copyResourceFolder("worlds/empty", WORLDS_DIR.resolve(worldName));
-                doneCopying.set(true);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        });
-
-        // Wait for copy to be done
-        Bukkit.getScheduler().runTaskTimer(this.plugin, task -> {
-            if (!doneCopying.get())
-                return;
-
-            World world = createWorldFast(worldName);
-
-            if (world == null)
-                throw new NullPointerException("world");
-
-            world.setAutoSave(false);
-            world.setGameRule(GameRules.SPAWN_MOBS, false);
-            world.setGameRule(GameRules.ADVANCE_TIME, false);
-            world.setGameRule(GameRules.ADVANCE_WEATHER, false);
-            world.setGameRule(GameRules.SPECTATORS_GENERATE_CHUNKS, false);
-            world.setGameRule(GameRules.FALL_DAMAGE, false);
-            world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
-
-            this.gameWorlds.put(gameId, world);
-
-            onDone.accept(world);
-
-            task.cancel();
-        }, 0, 10);
+                            this.registerMap(mapId, map);
+                            this.plugin.getSLF4JLogger().info("Registered map '{}'", mapId);
+                        } catch (IOException ex) {
+                            this.plugin.getSLF4JLogger().error("Failed to load map {}", path, ex);
+                        }
+                    });
+        } catch(IOException ex) {
+            this.plugin.getSLF4JLogger().error("Failed to list files in {}", directoryPath, ex);
+        }
     }
 
-    private static World createWorldFast(String worldName) {
-        return WorldCreator
-                .name(worldName)
-                .forcedSpawnPosition(Position.BLOCK_ZERO, 0, 0) // <--- This is what makes it go fast
-                .createWorld();
+    public void registerMap(String id, ClownChaseMap map) {
+        maps.put(id, map);
+    }
+
+    public boolean unregisterMap(String id) {
+        return maps.remove(id) != null;
+    }
+
+    public Optional<ClownChaseMap> findMap(String id) {
+        ClownChaseMap map = maps.get(id);
+
+        return map == null ? Optional.empty() : Optional.of(map);
+    }
+
+    public Map<String, ClownChaseMap> getMaps() {
+        return Collections.unmodifiableMap(maps);
+    }
+
+    public World createGameWorld(int gameId, ClownChaseMap map) {
+        String worldName = "clown-chase_" + gameId;
+
+        World world = GameWorldUtils.createWorldWithoutInit(
+                WorldCreator.name(worldName)
+                        .biomeProvider(new CustomBiomeProvider(map.biome()))
+        );
+
+        world.setAutoSave(false);
+        world.setGameRule(GameRules.RANDOM_TICK_SPEED, 0);
+        world.setGameRule(GameRules.SPAWN_MOBS, false);
+        world.setGameRule(GameRules.ADVANCE_TIME, false);
+        world.setGameRule(GameRules.ADVANCE_WEATHER, false);
+        world.setGameRule(GameRules.SPECTATORS_GENERATE_CHUNKS, false);
+        world.setGameRule(GameRules.FALL_DAMAGE, false);
+        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
+
+        this.gameWorlds.put(gameId, world);
+
+        return world;
     }
 
     public void deleteGameWorld(int gameId, World world) {

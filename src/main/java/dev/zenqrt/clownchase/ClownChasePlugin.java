@@ -19,6 +19,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.Locale;
 
@@ -31,13 +32,15 @@ public final class ClownChasePlugin extends JavaPlugin {
         registerTranslations(ClownChasePlugin.class.getClassLoader().getResourceAsStream("lang/en_us.lang"));
 
         mapManager = new MapManager(this);
+        mapManager.loadMaps(getGameMapsDirectory());
+
         GameManager gameManager = new GameManager(this, mapManager);
 
         Bukkit.getPluginManager().registerEvents(new PlayerActivityListeners(this, gameManager), this);
         Bukkit.getPluginManager().registerEvents(new GameplayListeners(), this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-            GameCommand.register(commands.registrar(), gameManager);
+            GameCommand.register(commands.registrar(), gameManager, mapManager);
             MazeCommand.register(commands.registrar());
         });
     }
@@ -49,7 +52,11 @@ public final class ClownChasePlugin extends JavaPlugin {
     }
 
     public Location getLobbySpawn() {
-        return this.getServer().getRespawnWorld().getSpawnLocation().toCenterLocation();
+        return getServer().getRespawnWorld().getSpawnLocation().toCenterLocation();
+    }
+
+    public Path getGameMapsDirectory() {
+        return getDataFolder().toPath().resolve("maps");
     }
 
     private static void registerTranslations(InputStream langStream) {

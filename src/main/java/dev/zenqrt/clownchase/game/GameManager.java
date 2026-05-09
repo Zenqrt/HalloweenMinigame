@@ -1,9 +1,8 @@
 package dev.zenqrt.clownchase.game;
 
 import dev.zenqrt.clownchase.ClownChasePlugin;
+import dev.zenqrt.clownchase.map.ClownChaseMap;
 import dev.zenqrt.clownchase.map.MapManager;
-import dev.zenqrt.clownchase.maze.theme.SolidMazeTheme;
-import org.bukkit.block.BlockType;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,10 +23,10 @@ public final class GameManager {
         this.nextGameId = new AtomicInteger(0);
     }
 
-    public ClownChaseGame createGame(GameSettings settings) {
+    public ClownChaseGame createGame(ClownChaseMap map, GameSettings settings) {
         int gameId = nextGameId.incrementAndGet();
 
-        ClownChaseGame game = new ClownChaseGame(gameId, this, this.mapManager, this.plugin, new SolidMazeTheme(6, 4, 5, BlockType.BLACK_CONCRETE.createBlockData(), BlockType.WHITE_CONCRETE.createBlockData()), settings);
+        ClownChaseGame game = new ClownChaseGame(gameId, this, this.mapManager, map, this.plugin, settings);
         games.put(gameId, game);
 
         return game;

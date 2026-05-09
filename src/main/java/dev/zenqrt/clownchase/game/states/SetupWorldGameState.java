@@ -6,6 +6,7 @@ import dev.zenqrt.clownchase.map.MapManager;
 import dev.zenqrt.clownchase.maze.MazeBuilder;
 import dev.zenqrt.clownchase.maze.strategy.MazeGenerationStrategy;
 import io.papermc.paper.math.Position;
+import org.bukkit.World;
 
 public final class SetupWorldGameState extends GameState {
 
@@ -23,15 +24,21 @@ public final class SetupWorldGameState extends GameState {
 
     @Override
     protected void onStateStart() {
-        this.mapManager.createGameWorldAsync(this.game.getId(), world -> {
-            this.game.getBoard().populate(generationStrategy);
+        World world = this.mapManager.createGameWorld(this.game.getId(), this.game.getMap());
 
-            MazeBuilder.constructMaze(this.game.getBoard(), this.game.getTheme(), mazeScale, world, Position.block(0, 42, 0));
+        this.game.getBoard().populate(generationStrategy);
 
-            this.game.setGameWorld(world);
-            this.game.setWorldReady(true);
+        world.getChunksAtAsync(
+                0, 0,
+                (this.game.getBoard().getDimensionX() * mazeScale) >> 4, (this.game.getBoard().getDimensionY() * mazeScale) >> 4,
+                true,
+                () -> {
+                    MazeBuilder.constructMaze(this.game.getBoard(), this.game.getTheme(), mazeScale, world, Position.block(0, 42, 0));
 
-            this.game.nextState();
-        });
+                    this.game.setWorldReady(true);
+                });
+
+        this.game.setGameWorld(world);
+        this.game.nextState();
     }
 }

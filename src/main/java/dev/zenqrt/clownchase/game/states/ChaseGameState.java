@@ -408,7 +408,7 @@ public final class ChaseGameState extends GameState implements Listener {
                     return type;
             }
 
-            throw new IllegalStateException("Failed to pick random candy type");
+            throw new IllegalStateException("Could not pick CandyType");
         }
 
         private void spawnCandy(ServerLevel level, Candy candy) {

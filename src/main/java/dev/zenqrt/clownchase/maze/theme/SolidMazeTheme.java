@@ -2,7 +2,6 @@ package dev.zenqrt.clownchase.maze.theme;
 
 import dev.zenqrt.clownchase.maze.theme.ground.SolidGroundDecoration;
 import dev.zenqrt.clownchase.maze.theme.wall.SolidWallDecoration;
-import org.bukkit.block.Biome;
 import org.bukkit.block.data.BlockData;
 
 public final class SolidMazeTheme implements MazeTheme<SolidGroundDecoration, SolidWallDecoration> {
@@ -25,8 +24,4 @@ public final class SolidMazeTheme implements MazeTheme<SolidGroundDecoration, So
         return wallDecoration;
     }
 
-    @Override
-    public Biome biome() {
-        return Biome.CRIMSON_FOREST;
-    }
 }

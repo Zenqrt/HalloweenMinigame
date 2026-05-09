@@ -32,7 +32,7 @@ public final class GameWorldUtils {
 
     private GameWorldUtils() {}
 
-    public static World createWorldWithoutPrepare(WorldCreator creator) {
+    public static World createWorldWithoutInit(WorldCreator creator) {
         String name = creator.name();
         MinecraftServer server = MinecraftServer.getServer();
 
