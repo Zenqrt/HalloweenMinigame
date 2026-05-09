@@ -1,6 +1,8 @@
 package dev.zenqrt.clownchase.game.states;
 
 import dev.zenqrt.clownchase.game.ClownChaseGame;
+import dev.zenqrt.clownchase.game.ClownChasePlayer;
+import dev.zenqrt.clownchase.game.GameManager;
 import dev.zenqrt.clownchase.game.base.GameState;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -9,16 +11,17 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public final class TeleportPlayersToLobbyGameState extends GameState {
 
-    private final List<UUID> playersTeleported = new ArrayList<>();
+    private final List<ClownChasePlayer> playersTeleported = new ArrayList<>();
     private final Location lobbySpawn;
+    private final GameManager gameManager;
     private final ClownChaseGame game;
 
-    public TeleportPlayersToLobbyGameState(ClownChaseGame game, Location lobbySpawn) {
+    public TeleportPlayersToLobbyGameState(ClownChaseGame game, GameManager gameManager, Location lobbySpawn) {
         this.game = game;
+        this.gameManager = gameManager;
         this.lobbySpawn = lobbySpawn;
     }
 
@@ -26,7 +29,7 @@ public final class TeleportPlayersToLobbyGameState extends GameState {
     protected void onStateStart() {
         final int playerSize = this.game.getPlayers().size();
 
-        this.game.getPlayers().forEach((uuid, gamePlayer) -> {
+        this.game.getPlayers().forEach((_, gamePlayer) -> {
             Player player = gamePlayer.validatePlayer();
 
             player.setGameMode(GameMode.ADVENTURE);
@@ -34,7 +37,7 @@ public final class TeleportPlayersToLobbyGameState extends GameState {
             player.clearActivePotionEffects();
 
             player.teleportAsync(lobbySpawn)
-                    .thenRunAsync(() -> playersTeleported.add(uuid));
+                    .thenRunAsync(() -> playersTeleported.add(gamePlayer));
         });
 
         new TeleportCheckTask(playerSize, 200)
@@ -43,7 +46,7 @@ public final class TeleportPlayersToLobbyGameState extends GameState {
 
     @Override
     protected void onStateEnd() {
-        playersTeleported.forEach(this.game::removePlayer);
+        playersTeleported.forEach(this.gameManager::removePlayer);
     }
 
     private class TeleportCheckTask extends BukkitRunnable {

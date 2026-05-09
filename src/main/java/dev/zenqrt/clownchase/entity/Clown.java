@@ -12,6 +12,8 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -107,5 +109,15 @@ public final class Clown extends Husk {
     public void setSpeedModifier(float modifier) {
         AttributeInstance movementSpeed = Objects.requireNonNull(this.getAttribute(Attributes.MOVEMENT_SPEED), "movementSpeed");
         movementSpeed.addOrUpdateTransientModifier(new AttributeModifier(Identifier.fromNamespaceAndPath(Identifier.DEFAULT_NAMESPACE, "clown_speed"), modifier, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+    }
+
+    @Override
+    public @NotNull SoundEvent getAmbientSound() {
+        return SoundEvents.WITCH_CELEBRATE;
+    }
+
+    @Override
+    public float getVoicePitch() {
+        return 1.5F;
     }
 }

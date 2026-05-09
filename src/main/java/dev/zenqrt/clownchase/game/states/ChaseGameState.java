@@ -354,7 +354,6 @@ public final class ChaseGameState extends GameState implements Listener {
 
             playerData.addCandyCollected(1);
 
-            player.setLevel(playerData.getCandyCollected());
             player.playSound(CONSUME_SOUND, Sound.Emitter.self());
 
             ChaseGameState.this.spawnedCandies.remove(candy);

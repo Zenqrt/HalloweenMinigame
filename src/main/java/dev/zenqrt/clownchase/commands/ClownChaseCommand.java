@@ -19,45 +19,52 @@ import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public final class GameCommand {
+public final class ClownChaseCommand {
 
     public static void register(Commands commands, GameManager gameManager, MapManager mapManager) {
         commands.register(
-                Commands.literal("game").requires(source -> source.getSender().isOp())
-                        .then(Commands.literal("create")
-                                .then(Commands.argument("map", StringArgumentType.word()).suggests((_, builder) -> mapSuggestions(mapManager, builder))
-                                        .then(Commands.argument("game_time", IntegerArgumentType.integer(0))
-                                                .then(Commands.argument("min_players", IntegerArgumentType.integer(0))
-                                                        .then(Commands.argument("max_players", IntegerArgumentType.integer(0))
-                                                                .executes(context -> onGameCreate(context.getSource(), gameManager, mapManager, context.getArgument("map", String.class), context.getArgument("game_time", Integer.class), context.getArgument("min_players", Integer.class), context.getArgument("max_players", Integer.class))))))))
-                        .then(Commands.literal("join")
-                                .then(GameIdArgumentType()
-                                        .executes(context -> onGameJoin(context.getSource(), gameManager, getGameIdArgument(context)))))
-                        .then(Commands.literal("list")
-                                .executes(context -> onGameList(context.getSource(), gameManager)))
-                        .then(Commands.literal("info")
-                                .then(GameIdArgumentType()
-                                        .executes(context -> onGameInfo(context.getSource(), gameManager, getGameIdArgument(context))))
-                                .requires(source -> source.getExecutor() instanceof Player)
-                                .executes(context -> findSourceGameId(context.getSource(), gameManager).map(gameId -> onGameInfo(context.getSource(), gameManager, gameId)).orElse(0)))
-                        .then(Commands.literal("state")
-                                .then(Commands.literal("next")
+                Commands.literal("clownchase")
+                        .then(Commands.literal("autojoin")
+                                .executes(context -> onGameAutoJoin(context.getSource(), gameManager)))
+                        .then(Commands.literal("admin").requires(source -> source.getSender().isOp())
+                                .then(Commands.literal("join")
                                         .then(GameIdArgumentType()
-                                                .executes(context -> onGameStateNext(context.getSource(), gameManager, getGameIdArgument(context))))
-                                        .requires(source -> source.getExecutor() instanceof Player)
-                                        .executes(context -> findSourceGameId(context.getSource(), gameManager).map(gameId -> onGameStateNext(context.getSource(), gameManager, gameId)).orElse(0)))
-                                .then(Commands.literal("prev")
+                                                .executes(context -> onGameJoin(context.getSource(), gameManager, getGameIdArgument(context)))))
+                                .then(Commands.literal("create")
+                                        .then(Commands.argument("map", StringArgumentType.word()).suggests((_, builder) -> mapSuggestions(mapManager, builder))
+                                                .then(Commands.argument("game_time", IntegerArgumentType.integer(0))
+                                                        .then(Commands.argument("min_players", IntegerArgumentType.integer(0))
+                                                                .then(Commands.argument("max_players", IntegerArgumentType.integer(0))
+                                                                        .executes(context -> onGameCreate(context.getSource(), gameManager, mapManager, context.getArgument("map", String.class), context.getArgument("game_time", Integer.class), context.getArgument("min_players", Integer.class), context.getArgument("max_players", Integer.class))))))))
+                                .then(Commands.literal("list")
+                                        .executes(context -> onGameList(context.getSource(), gameManager)))
+
+                                .then(Commands.literal("info")
                                         .then(GameIdArgumentType()
-                                                .executes(context -> onGameStatePrevious(context.getSource(), gameManager, getGameIdArgument(context))))
+                                                .executes(context -> onGameInfo(context.getSource(), gameManager, getGameIdArgument(context))))
                                         .requires(source -> source.getExecutor() instanceof Player)
-                                        .executes(context -> findSourceGameId(context.getSource(), gameManager).map(gameId -> onGameStatePrevious(context.getSource(), gameManager, gameId)).orElse(0)))
+                                        .executes(context -> findSourceGameId(context.getSource(), gameManager).map(gameId -> onGameInfo(context.getSource(), gameManager, gameId)).orElse(0)))
+                                .then(Commands.literal("state")
+                                        .then(Commands.literal("next")
+                                                .then(GameIdArgumentType()
+                                                        .executes(context -> onGameStateNext(context.getSource(), gameManager, getGameIdArgument(context))))
+                                                .requires(source -> source.getExecutor() instanceof Player)
+                                                .executes(context -> findSourceGameId(context.getSource(), gameManager).map(gameId -> onGameStateNext(context.getSource(), gameManager, gameId)).orElse(0)))
+                                        .then(Commands.literal("prev")
+                                                .then(GameIdArgumentType()
+                                                        .executes(context -> onGameStatePrevious(context.getSource(), gameManager, getGameIdArgument(context))))
+                                                .requires(source -> source.getExecutor() instanceof Player)
+                                                .executes(context -> findSourceGameId(context.getSource(), gameManager).map(gameId -> onGameStatePrevious(context.getSource(), gameManager, gameId)).orElse(0)))
+                                )
                         )
-                        .build()
+                        .build(), Collections.singletonList("cc")
         );
     }
 
@@ -115,6 +122,38 @@ public final class GameCommand {
             gamePlayer.setGame(game);
 
             source.getSender().sendMessage(Component.text("Joined game " + game.getId(), NamedTextColor.GREEN));
+            return Command.SINGLE_SUCCESS;
+        }
+    }
+
+    private static int onGameAutoJoin(CommandSourceStack source, GameManager gameManager) {
+        Optional<ClownChasePlayer> gamePlayerOptional = gameManager.findPlayer(source.getExecutor().getUniqueId());
+
+        if (gamePlayerOptional.isEmpty()) {
+            source.getSender().sendMessage(Component.text("Could not find game player data!", TextColorPresets.ERROR));
+            return 0;
+        } else {
+            ClownChasePlayer gamePlayer = gamePlayerOptional.get();
+            ClownChaseGame existingGame = gamePlayer.getGame();
+
+            if (existingGame != null) {
+                source.getSender().sendMessage(Component.text("You are already in a game!", TextColorPresets.ERROR));
+                return 0;
+            }
+
+            Optional<ClownChaseGame> gameOptional = gameManager.findAvailableGame();
+
+            if (gameOptional.isEmpty()) {
+                source.getSender().sendMessage(Component.text("Could not find an available game!", TextColorPresets.ERROR));
+                return 0;
+            }
+
+            ClownChaseGame game = gameOptional.get();
+
+            source.getSender().sendMessage(Component.text("Joining game...", NamedTextColor.GRAY).decorate(TextDecoration.ITALIC));
+            game.addPlayer(gamePlayer);
+            gamePlayer.setGame(game);
+
             return Command.SINGLE_SUCCESS;
         }
     }
