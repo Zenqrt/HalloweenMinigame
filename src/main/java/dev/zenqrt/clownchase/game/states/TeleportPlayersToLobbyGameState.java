@@ -46,7 +46,7 @@ public final class TeleportPlayersToLobbyGameState extends GameState {
 
     @Override
     protected void onStateEnd() {
-        playersTeleported.forEach(this.gameManager::removePlayer);
+        playersTeleported.forEach(gamePlayer -> this.gameManager.leaveGame(gamePlayer, this.game));
     }
 
     private class TeleportCheckTask extends BukkitRunnable {

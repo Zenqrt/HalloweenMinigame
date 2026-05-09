@@ -61,14 +61,14 @@ public final class ClownChaseGame extends GameStateSequence {
         this.board = new MazeBoard(16, 16);
 
         this.states = List.of(
-                new SetupWorldGameState(this, this.mapManager, new RecursiveDivisionStrategy(), MAZE_SCALE),
+                new SetupWorldGameState(this, mapManager, new RecursiveDivisionStrategy(), MAZE_SCALE),
                 new IntermissionGameState(this),
                 new SetupPlayersGameState(this),
                 new SpawnClownsGameState(this),
                 new FreezeCountdownGameState(this),
                 new ChaseGameState(this),
                 new AnnounceWinnerGameState(this, 200), // 10 seconds
-                new TeleportPlayersToLobbyGameState(this, plugin.getLobbySpawn())
+                new TeleportPlayersToLobbyGameState(this, gameManager, plugin.getLobbySpawn())
         );
     }
 

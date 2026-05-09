@@ -50,6 +50,16 @@ public final class GameManager {
         return Collections.unmodifiableMap(games);
     }
 
+    public void joinGame(ClownChasePlayer gamePlayer, ClownChaseGame game) {
+        game.addPlayer(gamePlayer);
+        gamePlayer.setGame(game);
+    }
+
+    public void leaveGame(ClownChasePlayer gamePlayer, ClownChaseGame game) {
+        game.removePlayer(gamePlayer);
+        gamePlayer.setGame(null);
+    }
+
     public ClownChasePlayer addPlayer(UUID uuid) {
         ClownChasePlayer gamePlayer = new ClownChasePlayer(uuid);
         players.put(gamePlayer.getUniqueId(), gamePlayer);
