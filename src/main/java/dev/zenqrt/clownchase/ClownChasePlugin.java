@@ -2,6 +2,7 @@ package dev.zenqrt.clownchase;
 
 import dev.zenqrt.clownchase.commands.GameCommand;
 import dev.zenqrt.clownchase.commands.MazeCommand;
+import dev.zenqrt.clownchase.event.listeners.GameWorldListeners;
 import dev.zenqrt.clownchase.event.listeners.GameplayListeners;
 import dev.zenqrt.clownchase.event.listeners.PlayerActivityListeners;
 import dev.zenqrt.clownchase.game.GameManager;
@@ -38,6 +39,7 @@ public final class ClownChasePlugin extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new PlayerActivityListeners(this, gameManager), this);
         Bukkit.getPluginManager().registerEvents(new GameplayListeners(), this);
+        Bukkit.getPluginManager().registerEvents(new GameWorldListeners(mapManager), this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             GameCommand.register(commands.registrar(), gameManager, mapManager);

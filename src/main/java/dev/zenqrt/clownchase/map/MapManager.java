@@ -19,10 +19,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 public final class MapManager {
@@ -34,6 +31,7 @@ public final class MapManager {
 
     private final Map<String, ClownChaseMap> maps = new HashMap<>();
     private final Map<Integer, World> gameWorlds = new HashMap<>();
+    private final Set<UUID> gameWorldUuids = new HashSet<>();
     private final ClownChasePlugin plugin;
 
     public MapManager(ClownChasePlugin plugin) {
@@ -96,6 +94,7 @@ public final class MapManager {
         world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
 
         this.gameWorlds.put(gameId, world);
+        this.gameWorldUuids.add(world.getUID());
 
         return world;
     }
@@ -103,13 +102,15 @@ public final class MapManager {
     public void deleteGameWorld(int gameId, World world) {
         unloadAndDeleteWorld(world);
 
-        if (!gameWorlds.remove(gameId, world))
+        if (!gameWorlds.remove(gameId, world) || !gameWorldUuids.remove(world.getUID()))
             throw new RuntimeException("Could not remove world '" + world.getName() + "' from gameWorlds");
     }
 
     public void deleteAllGameWorlds() {
         this.gameWorlds.forEach((_, world) -> unloadAndDeleteWorld(world));
         this.gameWorlds.clear();
+
+        this.gameWorldUuids.clear();
     }
 
     private static void unloadAndDeleteWorld(World world) {
@@ -121,6 +122,10 @@ public final class MapManager {
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    public boolean isGameWorld(World world) {
+        return this.gameWorldUuids.contains(world.getUID());
     }
 
 }
