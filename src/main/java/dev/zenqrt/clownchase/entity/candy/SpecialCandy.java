@@ -3,14 +3,20 @@ package dev.zenqrt.clownchase.entity.candy;
 import dev.zenqrt.clownchase.utils.EntityUtils;
 import io.papermc.paper.adventure.PaperAdventure;
 import net.kyori.adventure.text.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LightBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 
 public class SpecialCandy extends Candy {
+
+    private static final BlockState LIGHT_STATE = Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, 8);
 
     private final TextDisplay tagDisplay;
 
@@ -26,6 +32,9 @@ public class SpecialCandy extends Candy {
     @Override
     public void startSeenByPlayer(@NotNull ServerPlayer player) {
         EntityUtils.showEntity(this.tagDisplay, this.getX(), this.getY() + 0.25, this.getZ(), player);
+
+        ClientboundBlockUpdatePacket blockUpdate = new ClientboundBlockUpdatePacket(this.blockPosition(), LIGHT_STATE);
+        player.connection.send(blockUpdate);
     }
 
     @Override
@@ -33,6 +42,9 @@ public class SpecialCandy extends Candy {
         super.stopSeenByPlayer(player);
 
         EntityUtils.hideEntity(this.tagDisplay, player);
+
+        ClientboundBlockUpdatePacket blockUpdate = new ClientboundBlockUpdatePacket(this.blockPosition(), Blocks.AIR.defaultBlockState());
+        player.connection.send(blockUpdate);
     }
 
     @Override
