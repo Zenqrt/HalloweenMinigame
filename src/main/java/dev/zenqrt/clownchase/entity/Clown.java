@@ -2,9 +2,17 @@ package dev.zenqrt.clownchase.entity;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import com.mojang.math.Transformation;
+import dev.zenqrt.clownchase.utils.EntityUtils;
+import io.papermc.paper.adventure.PaperAdventure;
 import io.papermc.paper.profile.MutablePropertyMap;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -19,12 +27,15 @@ import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.Level;
 import org.bukkit.event.entity.EntityTargetEvent;
+import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3f;
 
 import java.util.Objects;
 import java.util.UUID;
 
 public final class Clown extends Husk {
 
+    private static final String YOUR_CLOWN = "game.clown.self.title";
     private static final ResolvableProfile HEAD_PROFILE;
 
     static {
@@ -34,14 +45,39 @@ public final class Clown extends Husk {
         HEAD_PROFILE = ResolvableProfile.createResolved(new GameProfile(UUID.randomUUID(), "", properties));
     }
 
+    private final Display.TextDisplay selfTag;
+    private final Player playerTarget;
 
     public Clown(Player target, Level level) {
         super(EntityType.HUSK, level);
+
+        this.playerTarget = target;
+
+        this.selfTag = new Display.TextDisplay(EntityType.TEXT_DISPLAY, level);
+        this.selfTag.setText(PaperAdventure.asVanilla(Component.translatable(YOUR_CLOWN, NamedTextColor.RED).decorate(TextDecoration.BOLD)));
+        this.selfTag.setBillboardConstraints(Display.BillboardConstraints.CENTER);
+        this.selfTag.setTransformation(new Transformation(new Vector3f(0, 0.25F, 0), null, null, null));
+        this.selfTag.startRiding(this);
 
         this.setTarget(target, EntityTargetEvent.TargetReason.CUSTOM);
         this.setInvulnerable(true);
 
         setupEquipment();
+    }
+
+    @Override
+    public void startSeenByPlayer(ServerPlayer player) {
+        if (!player.getUUID().equals(playerTarget.getUUID()))
+            return;
+
+        EntityUtils.showEntity(this.selfTag, this.getX(), this.getY(), this.getZ(), player);
+    }
+
+    @Override
+    public void stopSeenByPlayer(@NotNull ServerPlayer player) {
+        super.stopSeenByPlayer(player);
+
+        EntityUtils.hideEntity(this.selfTag, player);
     }
 
     private void setupEquipment() {
