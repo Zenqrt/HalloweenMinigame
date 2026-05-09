@@ -33,6 +33,24 @@ public final class SpeedCandy extends SpecialCandy {
     }
 
     @Override
+    protected void particleTick() {
+        createSpecialParticle()
+                .location(
+                        this.level().getWorld(),
+                        this.getX(),
+                        this.getY() - 0.25,
+                        this.getZ()
+                ).spawn();
+    }
+
+    private static ParticleBuilder createSpecialParticle() {
+        return Particle.SOUL.builder()
+                .offset(0.25, 0.25, 0.25)
+                .extra(0)
+                .count(1);
+    }
+
+    @Override
     public void onConsume(ClownChaseGame game, GamePlayerData playerData, Player player) {
         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, DURATION, 1));
 

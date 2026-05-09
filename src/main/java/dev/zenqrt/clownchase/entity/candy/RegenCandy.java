@@ -1,5 +1,6 @@
 package dev.zenqrt.clownchase.entity.candy;
 
+import com.destroystokyo.paper.ParticleBuilder;
 import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.GamePlayerData;
 import dev.zenqrt.clownchase.utils.text.Messages;
@@ -24,6 +25,26 @@ public final class RegenCandy extends SpecialCandy {
 
     public RegenCandy(Level level) {
         super(level, Component.translatable(CANDY_TITLE, TextColor.color(0xFFA3DE)).decorate(TextDecoration.BOLD), TEXTURES);
+    }
+
+    @Override
+    protected void particleTick() {
+        if (tickCount % 2 == 0) {
+            createSpecialParticle()
+                    .location(
+                            this.level().getWorld(),
+                            this.getX(),
+                            this.getY() - 0.25,
+                            this.getZ()
+                    ).spawn();
+        }
+    }
+
+    private static ParticleBuilder createSpecialParticle() {
+        return Particle.END_ROD.builder()
+                .offset(0.25, 0.25, 0.25)
+                .extra(0)
+                .count(1);
     }
 
     @Override

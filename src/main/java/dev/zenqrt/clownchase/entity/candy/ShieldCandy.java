@@ -1,11 +1,13 @@
 package dev.zenqrt.clownchase.entity.candy;
 
+import com.destroystokyo.paper.ParticleBuilder;
 import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.GamePlayerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.minecraft.world.level.Level;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 
 public final class ShieldCandy extends SpecialCandy {
@@ -15,6 +17,24 @@ public final class ShieldCandy extends SpecialCandy {
 
     public ShieldCandy(Level level) {
         super(level, Component.translatable(CANDY_TITLE, TextColor.color(0xD7BAFF)).decorate(TextDecoration.BOLD), TEXTURES);
+    }
+
+    @Override
+    protected void particleTick() {
+        createSpecialParticle()
+                .location(
+                        this.level().getWorld(),
+                        this.getX(),
+                        this.getY() - 0.25,
+                        this.getZ()
+                ).spawn();
+    }
+
+    private static ParticleBuilder createSpecialParticle() {
+        return Particle.REVERSE_PORTAL.builder()
+                .offset(0.25, 0.25, 0.25)
+                .extra(0)
+                .count(1);
     }
 
     @Override
