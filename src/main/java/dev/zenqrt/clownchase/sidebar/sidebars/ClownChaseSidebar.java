@@ -15,8 +15,9 @@ public final class ClownChaseSidebar extends PacketSidebar {
     private static final String GAME_SCOREBOARD_SECOND_PLACE_SCORE = "game.scoreboard.second_place_score";
     private static final String GAME_SCOREBOARD_FIRST_PLACE_SCORE = "game.scoreboard.first_place_score";
     private static final String GAME_SCOREBOARD_SCORE_HEADER = "game.scoreboard.score_header";
+    private static final String GAME_SCOREBOARD_MAP = "game.scoreboard.map";
 
-    public ClownChaseSidebar() {
+    public ClownChaseSidebar(String mapName) {
         super(Component.translatable(GAME_SCOREBOARD_TITLE, NamedTextColor.YELLOW).decorate(TextDecoration.BOLD));
 
         this.addLine("clown_distance", clownDistanceText(0));
@@ -25,6 +26,8 @@ public final class ClownChaseSidebar extends PacketSidebar {
         this.addLine("second_place_score", secondPlaceScoreText("...", 0));
         this.addLine("first_place_score", firstPlaceScoreText("...", 0));
         this.addLine("score_header", Component.translatable(GAME_SCOREBOARD_SCORE_HEADER, TextColorPresets.SCOREBOARD_TEXT));
+        this.addEmptyLine();
+        this.addLine("map", mapComponent(mapName));
     }
 
     public void setClownDistance(int distance) {
@@ -41,6 +44,10 @@ public final class ClownChaseSidebar extends PacketSidebar {
 
     public void setFirstPlaceScore(String username, int score) {
         this.updateLine("first_place_score", firstPlaceScoreText(username, score));
+    }
+
+    private static Component mapComponent(String mapName) {
+        return Component.translatable(GAME_SCOREBOARD_MAP, TextColorPresets.SCOREBOARD_TEXT, Component.text(mapName, NamedTextColor.WHITE));
     }
 
     private static Component firstPlaceScoreText(String username, int score) {

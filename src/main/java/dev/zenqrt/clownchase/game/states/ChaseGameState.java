@@ -93,7 +93,7 @@ public final class ChaseGameState extends GameState implements Listener {
 
         this.game.getPlayerToClown().forEach((_, clown) -> clown.setNoAi(false));
         this.game.getPlayers().forEach((_, gamePlayer) -> {
-            ClownChaseSidebar sidebar = new ClownChaseSidebar();
+            ClownChaseSidebar sidebar = new ClownChaseSidebar(this.game.getMap().displayName());
             sidebar.addViewer(((CraftPlayer) gamePlayer.validatePlayer()).getHandle());
 
             this.sidebarMap.put(gamePlayer.getUniqueId(), sidebar);
