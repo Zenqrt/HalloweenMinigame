@@ -1,7 +1,7 @@
 package dev.zenqrt.clownchase.entity.candy;
 
 import com.destroystokyo.paper.ParticleBuilder;
-import dev.zenqrt.clownchase.utils.EntityUtils;
+import dev.zenqrt.clownchase.utils.entity.EntityUtils;
 import io.papermc.paper.adventure.PaperAdventure;
 import net.kyori.adventure.text.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;

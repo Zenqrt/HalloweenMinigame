@@ -3,7 +3,8 @@ package dev.zenqrt.clownchase.entity;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.math.Transformation;
-import dev.zenqrt.clownchase.utils.EntityUtils;
+import dev.zenqrt.clownchase.entity.ai.goal.ClownAttackGoal;
+import dev.zenqrt.clownchase.utils.entity.EntityUtils;
 import io.papermc.paper.adventure.PaperAdventure;
 import io.papermc.paper.profile.MutablePropertyMap;
 import net.kyori.adventure.text.Component;
@@ -21,7 +22,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -104,7 +104,7 @@ public final class Clown extends Husk {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new MeleeAttackGoal(this, 1, true));
+        this.goalSelector.addGoal(0, new ClownAttackGoal(this, 1, true));
     }
 
     public void setSpeedModifier(float modifier) {
@@ -116,6 +116,8 @@ public final class Clown extends Husk {
     public boolean isWithinMeleeAttackRange(LivingEntity target) {
         return target.distanceTo(this) < 2;
     }
+
+
 
     @Override
     public @NotNull SoundEvent getAmbientSound() {
