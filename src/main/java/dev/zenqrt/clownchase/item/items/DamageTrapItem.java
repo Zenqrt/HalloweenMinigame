@@ -30,6 +30,7 @@ public final class DamageTrapItem extends CustomItem {
     private static final String HIT_SHIELD_SELF = "game.item.damage_trap.hit_shield.self";
     private static final String HIT_NO_SHIELD_SELF = "game.item.damage_trap.hit_no_shield.self";
     private static final int CANDY_STEAL = 5;
+    private static final int DAMAGE = 2;
 
     public DamageTrapItem() {
         super("damage_trap", Material.CRIMSON_PRESSURE_PLATE, "Damage Trap", ItemRarity.COMMON);
@@ -87,7 +88,7 @@ public final class DamageTrapItem extends CustomItem {
                     return;
                 }
 
-                trapper.damage(2);
+                trapper.damage(DAMAGE);
 
                 trapperPlayerData.removeCandyCollected(CANDY_STEAL);
                 this.state.updateCandyLeaderboard();
@@ -107,7 +108,7 @@ public final class DamageTrapItem extends CustomItem {
                 return;
             }
 
-            player.damage(2);
+            player.damage(DAMAGE);
 
             playerData.removeCandyCollected(CANDY_STEAL);
             trapperPlayerData.addCandyCollected(CANDY_STEAL);

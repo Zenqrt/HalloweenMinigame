@@ -2,7 +2,6 @@ package dev.zenqrt.clownchase.item.items;
 
 import com.destroystokyo.paper.ParticleBuilder;
 import com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent;
-import dev.zenqrt.clownchase.entity.Clown;
 import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.GamePlayerData;
 import dev.zenqrt.clownchase.item.CustomItem;
@@ -12,7 +11,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.Particle;
-import org.bukkit.entity.Husk;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -71,41 +69,35 @@ public final class StunBallItem extends CustomItem {
             if (!(projectile.getShooter() instanceof Player shooter))
                 return;
 
-            if (event.getHitEntity() instanceof Player hit) {
-                UUID hitUuid = event.getHitEntity().getUniqueId();
+            if (!(event.getHitEntity() instanceof Player hit))
+                return;
 
-                if (!super.game.hasPlayer(hitUuid))
-                    return;
+            UUID hitUuid = event.getHitEntity().getUniqueId();
 
-                GamePlayerData hitPlayerData = super.game.getPlayerData(hitUuid);
+            if (!super.game.hasPlayer(hitUuid))
+                return;
 
-                if (hitPlayerData.isShielded()) {
-                    super.game.breakShield(hit, hitPlayerData);
+            GamePlayerData hitPlayerData = super.game.getPlayerData(hitUuid);
 
-                    shooter.sendMessage(Component.translatable(HIT_SHIELD_SHOOTER, NamedTextColor.YELLOW,
-                            Messages.username(hit)
-                    ));
-                    hit.sendMessage(Component.translatable(HIT_SHIELD_VICTIM, NamedTextColor.RED,
-                            Messages.username(shooter)
-                    ));
-                } else {
-                    hit.addPotionEffects(createStunEffect(STUN_DURATION));
-                    createHitParticle()
-                            .location(projectile.getLocation())
-                            .spawn();
+            if (hitPlayerData.isShielded()) {
+                super.game.breakShield(hit, hitPlayerData);
 
-                    shooter.sendMessage(Component.translatable(HIT_NO_SHIELD_SHOOTER, NamedTextColor.YELLOW,
-                            Messages.username(hit), Messages.seconds(STUN_DURATION / 20)));
-                    hit.sendMessage(Component.translatable(HIT_NO_SHIELD_VICTIM, NamedTextColor.YELLOW,
-                            Messages.username(shooter), Messages.seconds(STUN_DURATION / 20)));
-                }
-            } else if (event.getHitEntity() instanceof Husk hitEntity) {
-                Clown clown = super.game.getPlayerToClown().get(shooter.getUniqueId());
+                shooter.sendMessage(Component.translatable(HIT_SHIELD_SHOOTER, NamedTextColor.YELLOW,
+                        Messages.username(hit)
+                ));
+                hit.sendMessage(Component.translatable(HIT_SHIELD_VICTIM, NamedTextColor.RED,
+                        Messages.username(shooter)
+                ));
+            } else {
+                hit.addPotionEffects(createStunEffect(STUN_DURATION));
+                createHitParticle()
+                        .location(projectile.getLocation())
+                        .spawn();
 
-                if (clown == null || !clown.getUUID().equals(hitEntity.getUniqueId()))
-                    return;
-
-                shooter.sendMessage("Not yet.");
+                shooter.sendMessage(Component.translatable(HIT_NO_SHIELD_SHOOTER, NamedTextColor.YELLOW,
+                        Messages.username(hit), Messages.seconds(STUN_DURATION / 20)));
+                hit.sendMessage(Component.translatable(HIT_NO_SHIELD_VICTIM, NamedTextColor.YELLOW,
+                        Messages.username(shooter), Messages.seconds(STUN_DURATION / 20)));
             }
         }
 
