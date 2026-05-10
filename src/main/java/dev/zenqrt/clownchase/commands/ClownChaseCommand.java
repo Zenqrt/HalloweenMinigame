@@ -63,6 +63,8 @@ public final class ClownChaseCommand {
                                                 .requires(source -> source.getExecutor() instanceof Player)
                                                 .executes(context -> findSourceGameId(context.getSource(), gameManager).map(gameId -> onGameStatePrevious(context.getSource(), gameManager, gameId)).orElse(0)))))
                         .then(Commands.literal("map").requires(source -> source.getSender().isOp())
+                                .then(Commands.literal("list")
+                                        .executes(context -> onMapList(context.getSource(), mapManager)))
                                 .then(Commands.literal("reload")
                                         .executes(context -> onMapReload(context.getSource(), mapManager))))
                         .build(), Collections.singletonList("cc")
@@ -241,6 +243,24 @@ public final class ClownChaseCommand {
                 },
                 () -> source.getSender().sendMessage(Component.text("Invalid game id " + gameId + "!", TextColorPresets.ERROR)));
 
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int onMapList(CommandSourceStack source, MapManager mapManager) {
+        Component response =
+                Component.join(
+                        JoinConfiguration.builder()
+                                .prefix(Component.text("\n\nRegistered Maps\n", NamedTextColor.GOLD).decorate(TextDecoration.BOLD))
+                                .separator(Component.newline())
+                                .build(),
+                        mapManager.getMaps().entrySet().stream()
+                                .map(entry -> Component.text("- ", NamedTextColor.DARK_GRAY)
+                                        .append(Component.text(entry.getValue().displayName(), NamedTextColor.WHITE))
+                                        .append(Component.text(" (" + entry.getKey() + ")", NamedTextColor.GRAY)))
+                                .toList()
+                );
+
+        source.getSender().sendMessage(response);
         return Command.SINGLE_SUCCESS;
     }
 
