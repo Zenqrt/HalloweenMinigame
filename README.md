@@ -14,15 +14,17 @@ Some candies include special items that you can use on other players or effects 
 ## Commands
 `/clownchase autojoin` - Join the next available game
 
-`/clownchase admin create <map> <game_time> <min_players> <max_players>` - Create a game with the specified game settings
+`/clownchase game create <map> <game_time> <min_players> <max_players>` - Create a game with the specified game settings
 
-`/clownchase join <game_id>` - Join the game
+`/clownchase game join <game_id>` - Join the game
 
-`/clownchase admin info [game_id]` - Get info about the game
+`/clownchase game info [game_id]` - Get info about the game
 
-`/clownchase state <next/prev> [game_id]` - Go forward or backward in the game's state sequence
+`/clownchase game state <next/prev> [game_id]` - Go forward or backward in the game's state sequence
 
-`/clownchase admin list` - List all active games
+`/clownchase game list` - List all active games
+
+`/clownchase map reload` - Reload maps from config
 
 ## Map Creation
 To create a map, create a `.json` file in `/plugins/ClownChase/maps`. The name of the file will be the map id.
