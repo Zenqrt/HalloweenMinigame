@@ -61,7 +61,7 @@ public final class FreezeCountdownGameState extends GameState implements Listene
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
-        if (!event.hasChangedPosition())
+        if (!event.hasChangedPosition() || !this.game.hasPlayer(event.getPlayer().getUniqueId()))
             return;
 
         event.setTo(event.getFrom());

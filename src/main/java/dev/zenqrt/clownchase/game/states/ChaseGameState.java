@@ -264,6 +264,9 @@ public final class ChaseGameState extends GameState implements Listener {
             updateTimerBossBar();
             updatePlayerDisplays();
 
+            System.out.println("S");
+            ChaseGameState.this.game.getMap().ambience().tick(ChaseGameState.this.game);
+
             if (this.currentTime % (this.gameTime / 3) == 0)
                 upgradeClownSpeed(audience);
         }
@@ -286,7 +289,7 @@ public final class ChaseGameState extends GameState implements Listener {
                 // Shield display
                 GamePlayerData playerData = ChaseGameState.this.game.getPlayerData(player.getUniqueId());
 
-                if (playerData.isShielded()) {
+                if (playerData.isShielded() && playerData.isAlive()) {
                     player.sendActionBar(
                             Component.text("[", NamedTextColor.DARK_GRAY)
                                     .append(Component.text(" \uD83D\uDEE1 ", NamedTextColor.LIGHT_PURPLE))

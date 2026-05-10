@@ -45,7 +45,7 @@ public final class AnnounceWinnerGameState extends GameState {
         });
 
         Audience audience = this.game.audience();
-        List<ClownChaseGame.LeaderboardEntry> leaderboard = this.game.getCandyLeaderboard(3);
+        List<ClownChaseGame.LeaderboardEntry> leaderboard = this.game.getCandyLeaderboard(12);
 
         audience.sendMessage(leaderboardMessage(leaderboard));
         audience.playSound(GAME_OVER_SOUND, Sound.Emitter.self());
@@ -74,7 +74,12 @@ public final class AnnounceWinnerGameState extends GameState {
                         JoinConfiguration.builder().separator(Component.newline()),
                         placementMessage(0, Component.text("1. ", NamedTextColor.WHITE).append(Component.text("\uD83D\uDC51", NamedTextColor.GOLD)), leaderboard),
                         placementMessage(1, Component.text("2.", NamedTextColor.WHITE), leaderboard),
-                        placementMessage(2, Component.text("3.", NamedTextColor.WHITE), leaderboard)))
+                        placementMessage(2, Component.text("3.", NamedTextColor.WHITE), leaderboard),
+                        placementMessage(3, Component.text("4.", NamedTextColor.WHITE), leaderboard),
+                        placementMessage(4, Component.text("5.", NamedTextColor.WHITE), leaderboard),
+                        placementMessage(5, Component.text("6.", NamedTextColor.WHITE), leaderboard)
+
+                        ))
                 .append(Component.newline())
                 .append(separator());
     }

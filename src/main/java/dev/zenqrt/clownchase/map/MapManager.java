@@ -3,8 +3,10 @@ package dev.zenqrt.clownchase.map;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.zenqrt.clownchase.ClownChasePlugin;
+import dev.zenqrt.clownchase.data.serializers.AmbienceSerializer;
 import dev.zenqrt.clownchase.data.serializers.BiomeSerializer;
 import dev.zenqrt.clownchase.data.serializers.MazeThemeSerializer;
+import dev.zenqrt.clownchase.map.ambience.Ambience;
 import dev.zenqrt.clownchase.maze.theme.MazeTheme;
 import dev.zenqrt.clownchase.utils.world.GameWorldUtils;
 import dev.zenqrt.clownchase.world.biome.CustomBiomeProvider;
@@ -27,6 +29,7 @@ public final class MapManager {
     private static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(Biome.class, new BiomeSerializer())
             .registerTypeAdapter(MazeTheme.class, new MazeThemeSerializer())
+            .registerTypeAdapter(Ambience.class, new AmbienceSerializer())
             .create();
 
     private final Map<String, ClownChaseMap> maps = new HashMap<>();

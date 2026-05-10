@@ -3,6 +3,7 @@ package dev.zenqrt.clownchase.game;
 import dev.zenqrt.clownchase.ClownChasePlugin;
 import dev.zenqrt.clownchase.entity.Clown;
 import dev.zenqrt.clownchase.event.events.GamePlayerJoinEvent;
+import dev.zenqrt.clownchase.event.events.GamePlayerQuitEvent;
 import dev.zenqrt.clownchase.game.base.GameStateSequence;
 import dev.zenqrt.clownchase.game.states.*;
 import dev.zenqrt.clownchase.map.ClownChaseMap;
@@ -122,7 +123,13 @@ public final class ClownChaseGame extends GameStateSequence {
     }
 
     public boolean removePlayer(ClownChasePlayer gamePlayer) {
-        return this.players.remove(gamePlayer.getUniqueId(), gamePlayer) || this.playerData.remove(gamePlayer.getUniqueId()) != null;
+        this.players.remove(gamePlayer.getUniqueId(), gamePlayer);
+        this.playerData.remove(gamePlayer.getUniqueId());
+
+        GamePlayerQuitEvent quitEvent = new GamePlayerQuitEvent(gamePlayer, this);
+        Bukkit.getPluginManager().callEvent(quitEvent);
+
+        return true;
     }
 
     public boolean removePlayer(UUID uuid) {
@@ -203,10 +210,9 @@ public final class ClownChaseGame extends GameStateSequence {
     public List<LeaderboardEntry> getCandyLeaderboard(int limit) {
         return this.players.entrySet().stream()
                 .map(entry -> new LeaderboardEntry(entry.getValue(), this.getPlayerData(entry.getKey())))
-                .sorted(Comparator.comparingInt(entry -> entry.playerData.getCandyCollected()))
+                .sorted(Comparator.comparingInt((LeaderboardEntry entry) -> entry.playerData.getCandyCollected()).reversed())
                 .limit(limit)
-                .toList()
-                .reversed();
+                .toList();
     }
 
     public MazeTheme<?, ?> getTheme() {

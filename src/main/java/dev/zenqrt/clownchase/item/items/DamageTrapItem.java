@@ -87,6 +87,8 @@ public final class DamageTrapItem extends CustomItem {
                     return;
                 }
 
+                trapper.damage(2);
+
                 trapperPlayerData.removeCandyCollected(CANDY_STEAL);
                 this.state.updateCandyLeaderboard();
 
@@ -104,6 +106,8 @@ public final class DamageTrapItem extends CustomItem {
 
                 return;
             }
+
+            player.damage(2);
 
             playerData.removeCandyCollected(CANDY_STEAL);
             trapperPlayerData.addCandyCollected(CANDY_STEAL);
