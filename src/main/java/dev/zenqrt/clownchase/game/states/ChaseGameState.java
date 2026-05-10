@@ -264,7 +264,6 @@ public final class ChaseGameState extends GameState implements Listener {
             updateTimerBossBar();
             updatePlayerDisplays();
 
-            System.out.println("S");
             ChaseGameState.this.game.getMap().ambience().tick(ChaseGameState.this.game);
 
             if (this.currentTime % (this.gameTime / 3) == 0)
