@@ -24,6 +24,8 @@ Some candies include special items that you can use on other players or effects 
 
 `/clownchase game list` - List all active games
 
+`/clownchase map list` - List all maps
+
 `/clownchase map reload` - Reload maps from config
 
 ## Map Creation
