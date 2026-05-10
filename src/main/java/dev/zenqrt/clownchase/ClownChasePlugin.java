@@ -32,8 +32,8 @@ public final class ClownChasePlugin extends JavaPlugin {
     public void onEnable() {
         registerTranslations(ClownChasePlugin.class.getClassLoader().getResourceAsStream("lang/en_us.lang"));
 
-        mapManager = new MapManager(this);
-        mapManager.loadMaps(getGameMapsDirectory());
+        mapManager = new MapManager(this, getGameMapsDirectory());
+        mapManager.loadMaps();
 
         GameManager gameManager = new GameManager(this, mapManager);
 

@@ -33,7 +33,7 @@ public final class ClownChaseCommand {
                 Commands.literal("clownchase")
                         .then(Commands.literal("autojoin")
                                 .executes(context -> onGameAutoJoin(context.getSource(), gameManager)))
-                        .then(Commands.literal("admin").requires(source -> source.getSender().isOp())
+                        .then(Commands.literal("game").requires(source -> source.getSender().isOp())
                                 .then(Commands.literal("join")
                                         .then(GameIdArgumentType()
                                                 .executes(context -> onGameJoin(context.getSource(), gameManager, getGameIdArgument(context)))))
@@ -61,9 +61,10 @@ public final class ClownChaseCommand {
                                                 .then(GameIdArgumentType()
                                                         .executes(context -> onGameStatePrevious(context.getSource(), gameManager, getGameIdArgument(context))))
                                                 .requires(source -> source.getExecutor() instanceof Player)
-                                                .executes(context -> findSourceGameId(context.getSource(), gameManager).map(gameId -> onGameStatePrevious(context.getSource(), gameManager, gameId)).orElse(0)))
-                                )
-                        )
+                                                .executes(context -> findSourceGameId(context.getSource(), gameManager).map(gameId -> onGameStatePrevious(context.getSource(), gameManager, gameId)).orElse(0)))))
+                        .then(Commands.literal("map").requires(source -> source.getSender().isOp())
+                                .then(Commands.literal("reload")
+                                        .executes(context -> onMapReload(context.getSource(), mapManager))))
                         .build(), Collections.singletonList("cc")
         );
     }
@@ -239,6 +240,17 @@ public final class ClownChaseCommand {
                     source.getSender().sendMessage(Component.text("Switching to previous state...", NamedTextColor.GRAY));
                 },
                 () -> source.getSender().sendMessage(Component.text("Invalid game id " + gameId + "!", TextColorPresets.ERROR)));
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int onMapReload(CommandSourceStack source, MapManager mapManager) {
+        source.getSender().sendMessage(Component.text("Reloading maps..."));
+
+        mapManager.unregisterAllMaps();
+        mapManager.loadMaps();
+
+        source.getSender().sendMessage(Component.text("Done!"));
 
         return Command.SINGLE_SUCCESS;
     }

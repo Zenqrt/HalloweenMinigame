@@ -288,7 +288,10 @@ public final class ChaseGameState extends GameState implements Listener {
                 // Shield display
                 GamePlayerData playerData = ChaseGameState.this.game.getPlayerData(player.getUniqueId());
 
-                if (playerData.isShielded() && playerData.isAlive()) {
+                if (!playerData.isAlive())
+                    return;
+
+                if (playerData.isShielded()) {
                     player.sendActionBar(
                             Component.text("[", NamedTextColor.DARK_GRAY)
                                     .append(Component.text(" \uD83D\uDEE1 ", NamedTextColor.LIGHT_PURPLE))

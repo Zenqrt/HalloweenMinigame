@@ -35,14 +35,16 @@ public final class MapManager {
     private final Map<String, ClownChaseMap> maps = new HashMap<>();
     private final Map<Integer, World> gameWorlds = new HashMap<>();
     private final Set<UUID> gameWorldUuids = new HashSet<>();
+    private final Path mapsDirectoryPath;
     private final ClownChasePlugin plugin;
 
-    public MapManager(ClownChasePlugin plugin) {
+    public MapManager(ClownChasePlugin plugin, Path mapsDirectoryPath) {
         this.plugin = plugin;
+        this.mapsDirectoryPath = mapsDirectoryPath;
     }
 
-    public void loadMaps(Path directoryPath) {
-        try (Stream<Path> files = Files.list(directoryPath)) {
+    public void loadMaps() {
+        try (Stream<Path> files = Files.list(mapsDirectoryPath)) {
             files.filter(Files::isRegularFile)
                     .filter(path -> path.toString().endsWith(".json"))
                     .forEach(path -> {
@@ -57,7 +59,7 @@ public final class MapManager {
                         }
                     });
         } catch(IOException ex) {
-            this.plugin.getSLF4JLogger().error("Failed to list files in {}", directoryPath, ex);
+            this.plugin.getSLF4JLogger().error("Failed to list files in {}", mapsDirectoryPath, ex);
         }
     }
 
@@ -67,6 +69,10 @@ public final class MapManager {
 
     public boolean unregisterMap(String id) {
         return maps.remove(id) != null;
+    }
+
+    public void unregisterAllMaps() {
+        maps.clear();
     }
 
     public Optional<ClownChaseMap> findMap(String id) {
