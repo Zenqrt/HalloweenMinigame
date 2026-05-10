@@ -17,6 +17,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -109,6 +110,11 @@ public final class Clown extends Husk {
     public void setSpeedModifier(float modifier) {
         AttributeInstance movementSpeed = Objects.requireNonNull(this.getAttribute(Attributes.MOVEMENT_SPEED), "movementSpeed");
         movementSpeed.addOrUpdateTransientModifier(new AttributeModifier(Identifier.fromNamespaceAndPath(Identifier.DEFAULT_NAMESPACE, "clown_speed"), modifier, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+    }
+
+    @Override
+    public boolean isWithinMeleeAttackRange(LivingEntity target) {
+        return target.distanceTo(this) < 2;
     }
 
     @Override
