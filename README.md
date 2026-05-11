@@ -2,6 +2,10 @@
 A maze-runner minigame where players must collect the most candies while being chased by their clowns! 
 Some candies include special items that you can use on other players or effects to boost yourself.
 
+This was made using Paper 26.1.2 and Java 25.
+
+This is a recreation of an old Halloween minigame I made (see minestom branch).
+
 ## Gameplay
 [![Watch the video](https://img.youtube.com/vi/I4x3FpFjvuE/hqdefault.jpg)](https://www.youtube.com/embed/I4x3FpFjvuE)
 
