@@ -9,6 +9,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import dev.zenqrt.clownchase.ClownChasePlugin;
+import dev.zenqrt.clownchase.dialog.CreateGameDialog;
 import dev.zenqrt.clownchase.exceptions.SimplePaperCommandExceptionType;
 import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.ClownChasePlayer;
@@ -55,7 +56,8 @@ public final class ClownChaseCommand {
                                                 .then(Commands.argument("game_time", IntegerArgumentType.integer(0))
                                                         .then(Commands.argument("min_players", IntegerArgumentType.integer(0))
                                                                 .then(Commands.argument("max_players", IntegerArgumentType.integer(0))
-                                                                        .executes(context -> onGameCreate(context.getSource(), tryGetGamePlayer(context.getSource(), gameManager), gameManager, mapManager, context.getArgument("map", String.class), context.getArgument("game_time", Integer.class), context.getArgument("min_players", Integer.class), context.getArgument("max_players", Integer.class))))))))
+                                                                        .executes(context -> onGameCreate(context.getSource(), tryGetGamePlayer(context.getSource(), gameManager), gameManager, mapManager, context.getArgument("map", String.class), context.getArgument("game_time", Integer.class), context.getArgument("min_players", Integer.class), context.getArgument("max_players", Integer.class)))))))
+                                        .executes(context -> onGameCreateDialog(context.getSource(), gameManager, mapManager)))
                                 .then(Commands.literal("list")
                                         .executes(context -> onGameList(context.getSource(), gameManager)))
                                 .then(Commands.literal("info")
@@ -151,6 +153,16 @@ public final class ClownChaseCommand {
 
         game.addPlayer(gamePlayer);
         gamePlayer.setGame(game);
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int onGameCreateDialog(CommandSourceStack source, GameManager gameManager, MapManager mapManager) {
+        assert source.getExecutor() instanceof Player;
+
+        source.getExecutor().showDialog(
+                CreateGameDialog.create(source.getExecutor().getUniqueId(), gameManager, mapManager)
+        );
 
         return Command.SINGLE_SUCCESS;
     }
