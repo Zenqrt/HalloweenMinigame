@@ -60,4 +60,8 @@ public final class IntermissionGameState extends GameStateSequence implements Li
                 Component.text(event.getGamePlayer().validatePlayer().getName(), TextColorPresets.USERNAME)));
     }
 
+    @Override
+    public boolean canPlayerJoin() {
+        return true;
+    }
 }

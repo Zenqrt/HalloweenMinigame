@@ -3,11 +3,6 @@ package dev.zenqrt.clownchase.game.base;
 public abstract class GameState {
 
     private boolean active;
-    private boolean canMoveOn;
-
-    public GameState() {
-        this.canMoveOn = true;
-    }
 
     protected void onStateStart() {}
     protected void onStateEnd() {}
@@ -23,7 +18,7 @@ public abstract class GameState {
     }
 
     public final boolean end() {
-        if (!(canMoveOn && active)) {
+        if (!active) {
             return false;
         }
 
@@ -33,11 +28,7 @@ public abstract class GameState {
         return true;
     }
 
-    public boolean canMoveOn() {
-        return canMoveOn;
-    }
-
-    public void setCanMoveOn(boolean canMoveOn) {
-        this.canMoveOn = canMoveOn;
+    public boolean canPlayerJoin() {
+        return false;
     }
 }

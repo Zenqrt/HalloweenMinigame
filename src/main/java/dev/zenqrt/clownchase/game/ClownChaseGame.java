@@ -20,15 +20,19 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.minecraft.world.entity.Entity;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class ClownChaseGame extends GameStateSequence {
+public final class ClownChaseGame extends GameStateSequence implements Listener {
 
     private static final String KICK_GAME_SHUTDOWN = "server.kick.game_shutdown";
     private static final String CONSUME_CANDY_SHIELD_ALREADY = "game.consume_candy.shield.already";
@@ -44,7 +48,7 @@ public final class ClownChaseGame extends GameStateSequence {
     private final Map<UUID, GamePlayerData> playerData = new HashMap<>();
     private final Map<UUID, ClownChasePlayer> players = new HashMap<>();
 
-    private ClownChaseMap map;
+    private final ClownChaseMap map;
     private final MazeBoard board;
     private final GameSettings gameSettings;
     private final ClownChasePlugin plugin;
@@ -74,6 +78,13 @@ public final class ClownChaseGame extends GameStateSequence {
     }
 
     @Override
+    protected void onStateStart() {
+        Bukkit.getPluginManager().registerEvents(this, this.plugin);
+
+        super.onStateStart();
+    }
+
+    @Override
     protected void onStateEnd() {
         super.onStateEnd();
 
@@ -98,6 +109,27 @@ public final class ClownChaseGame extends GameStateSequence {
 
             }
         }.runTaskTimer(this.plugin, 20, 40);
+    }
+
+    @EventHandler
+    public void onGamePlayerQuit(GamePlayerQuitEvent event) {
+        UUID uuid = event.getGamePlayer().getUniqueId();
+        Clown clown = playerToClown.remove(uuid);
+
+        if (clown == null)
+            return;
+
+        clown.remove(Entity.RemovalReason.DISCARDED);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        ClownChasePlayer gamePlayer = this.players.get(event.getPlayer().getUniqueId());
+
+        if (gamePlayer == null)
+            return;
+
+        this.gameManager.leaveGame(gamePlayer, this);
     }
 
     public GamePlayerData getPlayerData(UUID uuid) {
@@ -132,12 +164,8 @@ public final class ClownChaseGame extends GameStateSequence {
         return true;
     }
 
-    public boolean removePlayer(UUID uuid) {
-        return this.players.remove(uuid) != null;
-    }
-
     public boolean canPlayerJoin() {
-        return this.worldReady && this.players.size() < this.gameSettings.maxPlayers();
+        return getCurrentState().canPlayerJoin() && this.players.size() < this.gameSettings.maxPlayers();
     }
 
     public void grantShield(Player player, GamePlayerData playerData) {
@@ -160,6 +188,7 @@ public final class ClownChaseGame extends GameStateSequence {
     /**
      * todo: Please remove this after replacing this method. The better method will be placed in MazeUtils
      */
+    @SuppressWarnings("UnstableApiUsage")
     public BlockPosition findAvailableSpawn(int xRadius, int zRadius) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
 
@@ -175,6 +204,7 @@ public final class ClownChaseGame extends GameStateSequence {
         return position;
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     private static boolean isSurroundingAreaOpen(World world, BlockPosition origin, int xArea, int zArea) {
         for (int x = -xArea; x <= xArea; x++) {
             for (int z = -zArea; z <= zArea; z++) {
