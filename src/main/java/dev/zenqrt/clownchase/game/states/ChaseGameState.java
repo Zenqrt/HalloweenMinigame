@@ -15,7 +15,7 @@ import dev.zenqrt.clownchase.utils.attribute.GameAttributeModifiers;
 import dev.zenqrt.clownchase.utils.text.Messages;
 import dev.zenqrt.clownchase.utils.text.TextColorPresets;
 import dev.zenqrt.clownchase.utils.world.PositionUtils;
-import io.papermc.paper.math.BlockPosition;
+import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import io.papermc.paper.math.Position;
 import it.unimi.dsi.fastutil.Pair;
 import net.kyori.adventure.audience.Audience;
@@ -30,13 +30,16 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftEntity;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Husk;
+import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Pose;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -152,6 +155,7 @@ public final class ChaseGameState extends GameState implements Listener {
         player.sendMessage(Component.translatable(SHIELD_BROKEN, NamedTextColor.RED).decorate(TextDecoration.BOLD));
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getPlayer();
@@ -179,7 +183,12 @@ public final class ChaseGameState extends GameState implements Listener {
         ));
         player.playSound(DEATH_SOUND, Sound.Emitter.self());
 
-        tasks.add(new RespawnCountdownTask(5, player, this.game.getPlayerToClown().get(player.getUniqueId()))
+        Clown clown = this.game.getPlayerToClown().get(player.getUniqueId());
+        Mannequin deadBody = spawnDeadBody(player.getLocation(), ResolvableProfile.resolvableProfile(player.getPlayerProfile()));
+
+        clown.setNoAi(true);
+
+        tasks.add(new RespawnCountdownTask(5, player, clown, deadBody)
                 .runTaskTimer(this.game.getPlugin(), 0, 20));
 
         this.game.audience().sendMessage(
@@ -189,14 +198,18 @@ public final class ChaseGameState extends GameState implements Listener {
         );
     }
 
-    private void respawnPlayer(GamePlayerData playerData, Player player, Clown assignedClown) {
-        BlockPosition spawn;
 
-        do {
-            spawn = this.game.findAvailableSpawn(1, 1);
-        } while (PositionUtils.distance(assignedClown.getBukkitEntity().getLocation(), spawn) < 10);
+    @SuppressWarnings("UnstableApiUsage")
+    private static Mannequin spawnDeadBody(Location location, ResolvableProfile profile) {
+        return location.getWorld().spawn(location, Mannequin.class, body -> {
+            body.setProfile(profile);
+            body.setPose(Pose.SLEEPING);
+            body.setImmovable(true);
+        });
+    }
 
-        player.teleport(spawn.toLocation(this.game.getGameWorld()));
+    private void respawnPlayer(Location respawnPoint, GamePlayerData playerData, Player player) {
+        player.teleport(respawnPoint);
         player.setHealth(this.game.getGameSettings().maxHealth());
         player.removePotionEffect(PotionEffectType.BLINDNESS);
         player.setGameMode(GameMode.SURVIVAL);
@@ -275,6 +288,7 @@ public final class ChaseGameState extends GameState implements Listener {
             this.bossBar.progress((float) this.currentTime / this.gameTime);
         }
 
+        @SuppressWarnings("UnstableApiUsage")
         private void updatePlayerDisplays() {
             for (ClownChasePlayer gamePlayer : ChaseGameState.this.game.getPlayers().values()) {
                 Player player = gamePlayer.validatePlayer();
@@ -415,6 +429,7 @@ public final class ChaseGameState extends GameState implements Listener {
             throw new IllegalStateException("Could not pick CandyType");
         }
 
+        @SuppressWarnings("UnstableApiUsage")
         private void spawnCandy(ServerLevel level, Candy candy) {
             Position spawn = ChaseGameState.this.game.findAvailableSpawn(0, 0)
                     .offset(0.5, 1.5, 0.5);
@@ -429,12 +444,14 @@ public final class ChaseGameState extends GameState implements Listener {
     private class RespawnCountdownTask extends BukkitRunnable {
 
         private int currentTime;
+        private final Mannequin deadBody;
         private final Clown clown;
         private final Player player;
 
-        RespawnCountdownTask(int time, Player player, Clown clown) {
+        RespawnCountdownTask(int time, Player player, Clown clown, Mannequin deadBody) {
             this.player = player;
             this.clown = clown;
+            this.deadBody = deadBody;
             this.currentTime = time;
         }
 
@@ -448,7 +465,11 @@ public final class ChaseGameState extends GameState implements Listener {
                         Component.empty(),
                         Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(1))
                 ));
-                respawnPlayer(playerData, this.player, this.clown);
+
+                respawnPlayer(this.deadBody.getLocation(), playerData, this.player);
+                this.deadBody.remove();
+
+                this.clown.setNoAi(false);
 
                 this.cancel();
                 return;
