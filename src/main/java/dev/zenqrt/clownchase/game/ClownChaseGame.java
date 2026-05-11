@@ -88,8 +88,10 @@ public final class ClownChaseGame extends GameStateSequence implements Listener 
     protected void onStateEnd() {
         super.onStateEnd();
 
-        this.players.values().forEach(gamePlayer ->
-                gamePlayer.validatePlayer().kick(Component.translatable(KICK_GAME_SHUTDOWN, NamedTextColor.RED)));
+        this.players.values().stream()
+                .map(ClownChasePlayer::validatePlayer)
+                .filter(player -> player.getWorld().equals(this.gameWorld))
+                .forEach(player -> player.kick(Component.translatable(KICK_GAME_SHUTDOWN, NamedTextColor.RED)));
         this.players.clear();
 
         this.gameManager.deleteGame(gameId);

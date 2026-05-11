@@ -58,6 +58,9 @@ public final class ClownChaseCommand {
                                                                 .then(Commands.argument("max_players", IntegerArgumentType.integer(0))
                                                                         .executes(context -> onGameCreate(context.getSource(), tryGetGamePlayer(context.getSource(), gameManager), gameManager, mapManager, context.getArgument("map", String.class), context.getArgument("game_time", Integer.class), context.getArgument("min_players", Integer.class), context.getArgument("max_players", Integer.class)))))))
                                         .executes(context -> onGameCreateDialog(context.getSource(), gameManager, mapManager)))
+                                .then(Commands.literal("delete")
+                                        .then(GameIdArgumentType()
+                                                .executes(context -> onGameDelete(context.getSource(), tryGetGame(getGameIdArgument(context), gameManager)))))
                                 .then(Commands.literal("list")
                                         .executes(context -> onGameList(context.getSource(), gameManager)))
                                 .then(Commands.literal("info")
@@ -182,6 +185,14 @@ public final class ClownChaseCommand {
         game.start();
 
         return tryJoinGame(source, gamePlayer, game);
+    }
+
+    private static int onGameDelete(CommandSourceStack source, ClownChaseGame game) {
+        CommandMessages.sendInfo(source, "Deleting game...");
+
+        game.end();
+
+        return CommandMessages.sendSuccess(source, "Deleted game " + game.getId());
     }
 
     private static int onGameJoin(CommandSourceStack source, ClownChasePlayer gamePlayer, ClownChaseGame game) {
