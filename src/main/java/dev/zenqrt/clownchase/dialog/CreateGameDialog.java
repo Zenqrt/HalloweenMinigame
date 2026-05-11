@@ -8,11 +8,13 @@ import dev.zenqrt.clownchase.map.MapManager;
 import dev.zenqrt.clownchase.utils.dialog.DialogHelper;
 import dev.zenqrt.clownchase.utils.text.TextColorPresets;
 import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -54,41 +56,44 @@ public final class CreateGameDialog {
                 .type(DialogType.notice(
                         ActionButton.builder(Component.text("Create game"))
                                 .action(DialogHelper.handledCustomClick(
-                                        (response, audience) -> {
-                                            String mapId = response.getText(MAP_ID_KEY);
-                                            Optional<ClownChaseMap> mapOptional = mapManager.findMap(mapId);
-
-                                            if (mapOptional.isEmpty())
-                                                throw new IllegalArgumentException("Unknown map id '" + mapId + "'");
-
-                                            boolean shouldJoin = Boolean.TRUE.equals(response.getBoolean(JOIN_ON_CREATE_KEY));  // intellij really wanted me to do this
-
-                                            ClownChaseMap map = mapOptional.get();
-                                            int gameTime = parseIntField("Game time", response.getText(GAME_TIME_KEY));
-                                            int minPlayers = parseIntField("Minimum players", response.getText(MIN_PLAYERS_KEY));
-                                            int maxPlayers = parseIntField("Maximum players", response.getText(MAX_PLAYERS_KEY));
-
-                                            GameSettings gameSettings = new GameSettings(minPlayers, maxPlayers, gameTime, 6);
-
-                                            audience.sendMessage(Component.text("Creating game...", NamedTextColor.GRAY));
-
-                                            ClownChaseGame game = gameManager.createGame(map, gameSettings);
-                                            game.start();
-
-                                            audience.sendMessage(Component.text("Done!"));
-
-                                            if (shouldJoin) {
-                                                gameManager.findPlayer(executorUuid)
-                                                        .ifPresentOrElse(
-                                                                gamePlayer -> gameManager.joinGame(gamePlayer, game),
-                                                                () -> audience.sendMessage(Component.text("Could not find your game player profile!", NamedTextColor.RED))
-                                                        );
-                                            }
-                                        },
+                                        (response, audience) -> handleGameCreation(response, audience, executorUuid, gameManager, mapManager),
                                         ClickCallback.Options.builder().build()
                                 ))
                                 .build()
                 )));
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    private static void handleGameCreation(DialogResponseView response, Audience audience, UUID executorUuid, GameManager gameManager, MapManager mapManager) {
+            String mapId = response.getText(MAP_ID_KEY);
+            Optional<ClownChaseMap> mapOptional = mapManager.findMap(mapId);
+
+            if (mapOptional.isEmpty())
+                throw new IllegalArgumentException("Unknown map id '" + mapId + "'");
+
+            boolean shouldJoin = Boolean.TRUE.equals(response.getBoolean(JOIN_ON_CREATE_KEY));  // intellij really wanted me to do this
+
+            ClownChaseMap map = mapOptional.get();
+            int gameTime = parseIntField("Game time", response.getText(GAME_TIME_KEY));
+            int minPlayers = parseIntField("Minimum players", response.getText(MIN_PLAYERS_KEY));
+            int maxPlayers = parseIntField("Maximum players", response.getText(MAX_PLAYERS_KEY));
+
+            GameSettings gameSettings = new GameSettings(minPlayers, maxPlayers, gameTime, 6);
+
+            audience.sendMessage(Component.text("Creating game...", NamedTextColor.GRAY));
+
+            ClownChaseGame game = gameManager.createGame(map, gameSettings);
+            game.start();
+
+            audience.sendMessage(Component.text("Done!"));
+
+            if (shouldJoin) {
+                gameManager.findPlayer(executorUuid)
+                        .ifPresentOrElse(
+                                gamePlayer -> gameManager.joinGame(gamePlayer, game),
+                                () -> audience.sendMessage(Component.text("Could not find your game player profile!", NamedTextColor.RED))
+                        );
+            }
     }
 
     private static int parseIntField(String label, String input) {
