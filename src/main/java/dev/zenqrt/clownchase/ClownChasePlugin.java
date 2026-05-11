@@ -43,7 +43,7 @@ public final class ClownChasePlugin extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new GameWorldListeners(mapManager), this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-            ClownChaseCommand.register(commands.registrar(), gameManager, mapManager);
+            ClownChaseCommand.register(commands.registrar(), this, gameManager, mapManager);
             MazeCommand.register(commands.registrar());
             GlowCommand.register(commands.registrar());
         });

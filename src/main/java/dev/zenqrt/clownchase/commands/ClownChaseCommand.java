@@ -5,63 +5,75 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import dev.zenqrt.clownchase.ClownChasePlugin;
+import dev.zenqrt.clownchase.exceptions.SimplePaperCommandExceptionType;
 import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.ClownChasePlayer;
 import dev.zenqrt.clownchase.game.GameManager;
 import dev.zenqrt.clownchase.game.GameSettings;
 import dev.zenqrt.clownchase.map.ClownChaseMap;
 import dev.zenqrt.clownchase.map.MapManager;
-import dev.zenqrt.clownchase.utils.text.TextColorPresets;
+import dev.zenqrt.clownchase.utils.text.CommandMessages;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.Collections;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public final class ClownChaseCommand {
 
-    public static void register(Commands commands, GameManager gameManager, MapManager mapManager) {
+    private static final SimplePaperCommandExceptionType NO_MAP_WITH_ID = new SimplePaperCommandExceptionType(Component.text("Could not find map with that id!"));
+    private static final SimplePaperCommandExceptionType NO_GAME_PLAYER_PROFILE = new SimplePaperCommandExceptionType(Component.text("Could not find game player profile!"));
+    private static final SimplePaperCommandExceptionType NO_GAME_WITH_ID = new SimplePaperCommandExceptionType(Component.text("Could not find game with that id!"));
+    private static final SimplePaperCommandExceptionType NO_AVAILABLE_GAME = new SimplePaperCommandExceptionType(Component.text("Could not find an available game!"));
+    private static final SimplePaperCommandExceptionType NOT_IN_GAME = new SimplePaperCommandExceptionType(Component.text("You are not in a game!"));
+    private static final SimplePaperCommandExceptionType ALREADY_IN_GAME = new SimplePaperCommandExceptionType(Component.text("You are already in a game!"));
+
+    public static void register(Commands commands, ClownChasePlugin plugin, GameManager gameManager, MapManager mapManager) {
         commands.register(
                 Commands.literal("clownchase")
+                        .then(Commands.literal("lobby")
+                                .executes(context -> onLobby(context.getSource(), plugin.getLobbySpawn(), tryGetGamePlayer(context.getSource(), gameManager), gameManager)))
                         .then(Commands.literal("autojoin")
-                                .executes(context -> onGameAutoJoin(context.getSource(), gameManager)))
+                                .executes(context -> onGameAutoJoin(context.getSource(), tryGetGamePlayer(context.getSource(), gameManager), gameManager)))
                         .then(Commands.literal("game").requires(source -> source.getSender().isOp())
                                 .then(Commands.literal("join")
                                         .then(GameIdArgumentType()
-                                                .executes(context -> onGameJoin(context.getSource(), gameManager, getGameIdArgument(context)))))
+                                                .executes(context -> onGameJoin(context.getSource(), tryGetGamePlayer(context.getSource(), gameManager), tryGetGame(getGameIdArgument(context), gameManager)))))
                                 .then(Commands.literal("create")
                                         .then(Commands.argument("map", StringArgumentType.word()).suggests((_, builder) -> mapSuggestions(mapManager, builder))
                                                 .then(Commands.argument("game_time", IntegerArgumentType.integer(0))
                                                         .then(Commands.argument("min_players", IntegerArgumentType.integer(0))
                                                                 .then(Commands.argument("max_players", IntegerArgumentType.integer(0))
-                                                                        .executes(context -> onGameCreate(context.getSource(), gameManager, mapManager, context.getArgument("map", String.class), context.getArgument("game_time", Integer.class), context.getArgument("min_players", Integer.class), context.getArgument("max_players", Integer.class))))))))
+                                                                        .executes(context -> onGameCreate(context.getSource(), tryGetGamePlayer(context.getSource(), gameManager), gameManager, mapManager, context.getArgument("map", String.class), context.getArgument("game_time", Integer.class), context.getArgument("min_players", Integer.class), context.getArgument("max_players", Integer.class))))))))
                                 .then(Commands.literal("list")
                                         .executes(context -> onGameList(context.getSource(), gameManager)))
-
                                 .then(Commands.literal("info")
                                         .then(GameIdArgumentType()
-                                                .executes(context -> onGameInfo(context.getSource(), gameManager, getGameIdArgument(context))))
+                                                .executes(context -> onGameInfo(context.getSource(), tryGetGame(getGameIdArgument(context), gameManager))))
                                         .requires(source -> source.getExecutor() instanceof Player)
-                                        .executes(context -> findSourceGameId(context.getSource(), gameManager).map(gameId -> onGameInfo(context.getSource(), gameManager, gameId)).orElse(0)))
+                                        .executes(context -> onGameInfo(context.getSource(), tryGetSourceGame(context.getSource(), gameManager))))
                                 .then(Commands.literal("state")
                                         .then(Commands.literal("next")
                                                 .then(GameIdArgumentType()
-                                                        .executes(context -> onGameStateNext(context.getSource(), gameManager, getGameIdArgument(context))))
+                                                        .executes(context -> onGameStateNext(context.getSource(), tryGetGame(getGameIdArgument(context), gameManager))))
                                                 .requires(source -> source.getExecutor() instanceof Player)
-                                                .executes(context -> findSourceGameId(context.getSource(), gameManager).map(gameId -> onGameStateNext(context.getSource(), gameManager, gameId)).orElse(0)))
+                                                .executes(context -> onGameStateNext(context.getSource(), tryGetSourceGame(context.getSource(), gameManager))))
                                         .then(Commands.literal("prev")
                                                 .then(GameIdArgumentType()
-                                                        .executes(context -> onGameStatePrevious(context.getSource(), gameManager, getGameIdArgument(context))))
+                                                        .executes(context -> onGameStatePrevious(context.getSource(), tryGetGame(getGameIdArgument(context), gameManager)))
                                                 .requires(source -> source.getExecutor() instanceof Player)
-                                                .executes(context -> findSourceGameId(context.getSource(), gameManager).map(gameId -> onGameStatePrevious(context.getSource(), gameManager, gameId)).orElse(0)))))
+                                                .executes(context -> onGameStatePrevious(context.getSource(), tryGetSourceGame(context.getSource(), gameManager)))))))
                         .then(Commands.literal("map").requires(source -> source.getSender().isOp())
                                 .then(Commands.literal("list")
                                         .executes(context -> onMapList(context.getSource(), mapManager)))
@@ -86,127 +98,93 @@ public final class ClownChaseCommand {
         return context.getArgument("game_id", Integer.class);
     }
 
-    private static Optional<Integer> findSourceGameId(CommandSourceStack source, GameManager gameManager) {
+    private static ClownChaseGame tryGetSourceGame(CommandSourceStack source, GameManager gameManager) throws CommandSyntaxException {
         assert source.getExecutor() instanceof Player;
 
-        Optional<ClownChasePlayer> gamePlayerOptional = gameManager.findPlayer(source.getExecutor().getUniqueId());
+        ClownChasePlayer gamePlayer = tryGetGamePlayer(source, gameManager);
+        ClownChaseGame game = gamePlayer.getGame();
 
-        if (gamePlayerOptional.isEmpty()) {
-            source.getSender().sendMessage(Component.text("Could not find game player data!", TextColorPresets.ERROR));
-            return Optional.empty();
-        } else {
-            ClownChasePlayer gamePlayer = gamePlayerOptional.get();
+        if (game == null)
+            throw NOT_IN_GAME.create();
 
-            if (gamePlayer.getGame() == null) {
-                source.getSender().sendMessage(Component.text("You are currently not in a game!", TextColorPresets.ERROR));
-                return Optional.empty();
-            } else {
-                return Optional.of(gamePlayer.getGame().getId());
-            }
-        }
+        return game;
     }
 
-    private static int tryJoinGame(CommandSourceStack source, GameManager gameManager, ClownChaseGame game) {
+    private static int tryJoinGame(CommandSourceStack source, ClownChasePlayer gamePlayer, ClownChaseGame game) {
+        assert source.getExecutor() instanceof Player;
+
         source.getSender().sendMessage(Component.text("Joining game " + game.getId() + "...", NamedTextColor.GRAY));
 
-        Optional<ClownChasePlayer> gamePlayerOptional = gameManager.findPlayer(source.getExecutor().getUniqueId());
+        ClownChaseGame existingGame = gamePlayer.getGame();
 
-        if (gamePlayerOptional.isEmpty()) {
-            source.getSender().sendMessage(Component.text("Could not find game player data!", TextColorPresets.ERROR));
-            return 0;
-        } else {
-            ClownChasePlayer gamePlayer = gamePlayerOptional.get();
-            ClownChaseGame existingGame = gamePlayer.getGame();
+        if (existingGame != null)
+            existingGame.removePlayer(gamePlayer);
 
-            if (existingGame != null)
-                existingGame.removePlayer(gamePlayer);
+        game.addPlayer(gamePlayer);
+        gamePlayer.setGame(game);
 
-            game.addPlayer(gamePlayer);
-            gamePlayer.setGame(game);
-
-            source.getSender().sendMessage(Component.text("Joined game " + game.getId(), NamedTextColor.GREEN));
-            return Command.SINGLE_SUCCESS;
-        }
+        return CommandMessages.sendSuccess(source, "Joined game " + game.getId());
     }
 
-    private static int onGameAutoJoin(CommandSourceStack source, GameManager gameManager) {
-        Optional<ClownChasePlayer> gamePlayerOptional = gameManager.findPlayer(source.getExecutor().getUniqueId());
+    private static ClownChasePlayer tryGetGamePlayer(CommandSourceStack source, GameManager gameManager) throws CommandSyntaxException {
+        assert source.getExecutor() instanceof Player;
 
-        if (gamePlayerOptional.isEmpty()) {
-            source.getSender().sendMessage(Component.text("Could not find game player data!", TextColorPresets.ERROR));
-            return 0;
-        } else {
-            ClownChasePlayer gamePlayer = gamePlayerOptional.get();
-            ClownChaseGame existingGame = gamePlayer.getGame();
-
-            if (existingGame != null) {
-                source.getSender().sendMessage(Component.text("You are already in a game!", TextColorPresets.ERROR));
-                return 0;
-            }
-
-            Optional<ClownChaseGame> gameOptional = gameManager.findAvailableGame();
-
-            if (gameOptional.isEmpty()) {
-                source.getSender().sendMessage(Component.text("Could not find an available game!", TextColorPresets.ERROR));
-                return 0;
-            }
-
-            ClownChaseGame game = gameOptional.get();
-
-            source.getSender().sendMessage(Component.text("Joining game...", NamedTextColor.GRAY).decorate(TextDecoration.ITALIC));
-            game.addPlayer(gamePlayer);
-            gamePlayer.setGame(game);
-
-            return Command.SINGLE_SUCCESS;
-        }
+        return gameManager.findPlayer(source.getExecutor().getUniqueId())
+                .orElseThrow(NO_GAME_PLAYER_PROFILE::create);
     }
 
-    private static int onGameCreate(CommandSourceStack source, GameManager gameManager, MapManager mapManager, String mapId, int gameTime, int minPlayers, int maxPlayers) {
-        source.getSender().sendMessage(Component.text("Creating game...", NamedTextColor.GRAY));
+    private static ClownChaseGame tryGetGame(int gameId, GameManager gameManager) throws CommandSyntaxException {
+        return gameManager.findGame(gameId)
+                .orElseThrow(NO_GAME_WITH_ID::create);
+    }
 
-        Optional<ClownChaseMap> mapOptional = mapManager.findMap(mapId);
+    private static int onGameAutoJoin(CommandSourceStack source, ClownChasePlayer gamePlayer, GameManager gameManager) throws CommandSyntaxException {
+        ClownChaseGame existingGame = gamePlayer.getGame();
 
-        if (mapOptional.isEmpty()) {
-            source.getSender().sendMessage(Component.text("Could not find map " + mapId, TextColorPresets.ERROR));
-            return 0;
-        }
+        if (existingGame != null)
+            throw ALREADY_IN_GAME.create();
 
-        ClownChaseMap map = mapOptional.get();
+        ClownChaseGame game = gameManager.findAvailableGame()
+                .orElseThrow(NO_AVAILABLE_GAME::create);
+
+        CommandMessages.sendInfo(source, "Joining game...");
+
+        game.addPlayer(gamePlayer);
+        gamePlayer.setGame(game);
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int onGameCreate(CommandSourceStack source, ClownChasePlayer gamePlayer, GameManager gameManager, MapManager mapManager, String mapId, int gameTime, int minPlayers, int maxPlayers) throws CommandSyntaxException {
+        CommandMessages.sendInfo(source, "Creating game...");
+
+        ClownChaseMap map = mapManager.findMap(mapId)
+                .orElseThrow(NO_MAP_WITH_ID::create);
 
         GameSettings settings = new GameSettings(minPlayers, maxPlayers, gameTime, 6);
         ClownChaseGame game = gameManager.createGame(map, settings);
 
-        source.getSender().sendMessage(Component.text("Created game with id " + game.getId(), NamedTextColor.GREEN));
-        source.getSender().sendMessage(Component.text("Starting game...", NamedTextColor.GRAY));
+        CommandMessages.sendSuccess(source, "Created game with id " + game.getId());
+        CommandMessages.sendInfo(source, "Starting game...");
 
         game.start();
 
-        return tryJoinGame(source, gameManager, game);
+        return tryJoinGame(source, gamePlayer, game);
     }
 
-    private static int onGameJoin(CommandSourceStack source, GameManager gameManager, int gameId) {
-        gameManager.findGame(gameId).ifPresentOrElse(
-                game -> tryJoinGame(source, gameManager, game),
-                () -> source.getSender().sendMessage(Component.text("Invalid game id " + gameId + "!", TextColorPresets.ERROR)));
-
-        return Command.SINGLE_SUCCESS;
+    private static int onGameJoin(CommandSourceStack source, ClownChasePlayer gamePlayer, ClownChaseGame game) {
+        return tryJoinGame(source, gamePlayer, game);
     }
 
-    private static int onGameInfo(CommandSourceStack source, GameManager gameManager, int gameId) {
-        gameManager.findGame(gameId).ifPresentOrElse(
-                game -> {
-                    Component diagnosticMessage =
-                            Component.text("Game " + gameId + " Info:\n", NamedTextColor.GOLD)
-                                    .append(Component.text(" State: {state}\n", NamedTextColor.GRAY)
-                                            .replaceText(builder -> builder.matchLiteral("{state}").replacement(Component.text(game.getCurrentState().getClass().getSimpleName(), NamedTextColor.AQUA))))
-                                    .append(Component.text(" Player Count: {player_count}", NamedTextColor.GRAY)
-                                            .replaceText(builder -> builder.matchLiteral("{player_count}").replacement(Component.text(game.getPlayers().size(), NamedTextColor.YELLOW))));
+    private static int onGameInfo(CommandSourceStack source, ClownChaseGame game) {
+        Component diagnosticMessage =
+                Component.text("Game " + game.getId() + " Info:\n", NamedTextColor.GOLD)
+                        .append(Component.text(" State: {state}\n", NamedTextColor.GRAY)
+                                .replaceText(builder -> builder.matchLiteral("{state}").replacement(Component.text(game.getCurrentState().getClass().getSimpleName(), NamedTextColor.AQUA))))
+                        .append(Component.text(" Player Count: {player_count}", NamedTextColor.GRAY)
+                                .replaceText(builder -> builder.matchLiteral("{player_count}").replacement(Component.text(game.getPlayers().size(), NamedTextColor.YELLOW))));
 
-                    source.getSender().sendMessage(diagnosticMessage);
-
-                },
-                () -> source.getSender().sendMessage(Component.text("Invalid game id " + gameId + "!", TextColorPresets.ERROR)));
-        return Command.SINGLE_SUCCESS;
+        return CommandMessages.sendResponse(source, diagnosticMessage);
     }
 
     private static int onGameList(CommandSourceStack source, GameManager gameManager) {
@@ -220,28 +198,21 @@ public final class ClownChaseCommand {
                                         .toList()
                         ));
 
-        source.getSender().sendMessage(gamesListMessage);
-        return Command.SINGLE_SUCCESS;
+        return CommandMessages.sendResponse(source, gamesListMessage);
     }
 
-    private static int onGameStateNext(CommandSourceStack source, GameManager gameManager, int gameId) {
-        gameManager.findGame(gameId).ifPresentOrElse(
-                game -> {
-                    game.getCurrentState().end();
-                    source.getSender().sendMessage(Component.text("Switching to next state...", NamedTextColor.GRAY));
-                },
-                () -> source.getSender().sendMessage(Component.text("Invalid game id " + gameId + "!", TextColorPresets.ERROR)));
+    private static int onGameStateNext(CommandSourceStack source, ClownChaseGame game) {
+        CommandMessages.sendInfo(source, "Switching to next state...");
+
+        game.getCurrentState().end();
 
         return Command.SINGLE_SUCCESS;
     }
 
-    private static int onGameStatePrevious(CommandSourceStack source, GameManager gameManager, int gameId) {
-        gameManager.findGame(gameId).ifPresentOrElse(
-                game -> {
-                    game.previousState();
-                    source.getSender().sendMessage(Component.text("Switching to previous state...", NamedTextColor.GRAY));
-                },
-                () -> source.getSender().sendMessage(Component.text("Invalid game id " + gameId + "!", TextColorPresets.ERROR)));
+    private static int onGameStatePrevious(CommandSourceStack source, ClownChaseGame game) {
+        CommandMessages.sendInfo(source, "Switching to previous state...");
+
+        game.previousState();
 
         return Command.SINGLE_SUCCESS;
     }
@@ -260,17 +231,25 @@ public final class ClownChaseCommand {
                                 .toList()
                 );
 
-        source.getSender().sendMessage(response);
-        return Command.SINGLE_SUCCESS;
+        return CommandMessages.sendResponse(source, response);
     }
 
     private static int onMapReload(CommandSourceStack source, MapManager mapManager) {
-        source.getSender().sendMessage(Component.text("Reloading maps..."));
+        CommandMessages.sendInfo(source, "Reloading maps...");
 
         mapManager.unregisterAllMaps();
         mapManager.loadMaps();
 
-        source.getSender().sendMessage(Component.text("Done!"));
+        return CommandMessages.sendSuccess(source, "Done!");
+    }
+
+    private static int onLobby(CommandSourceStack source, Location lobbySpawn, ClownChasePlayer gamePlayer, GameManager gameManager) {
+        assert source.getExecutor() instanceof Player;
+
+        if (gamePlayer.getGame() != null)
+            gameManager.leaveGame(gamePlayer, gamePlayer.getGame());
+
+        source.getExecutor().teleportAsync(lobbySpawn, PlayerTeleportEvent.TeleportCause.COMMAND);
 
         return Command.SINGLE_SUCCESS;
     }
