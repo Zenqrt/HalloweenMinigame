@@ -13,14 +13,11 @@ public final class MazeBuilder {
 
     private static final int GROUND_DEPTH = 3;
 
+    @SuppressWarnings("UnstableApiUsage")
     public static <G extends MazeGroundDecoration, W extends MazeWallDecoration> void constructMaze(MazeBoard board, MazeTheme<G, W> theme, int scale, World world, BlockPosition origin) {
         BlockBatch batch = new BlockBatch();
 
         theme.groundDecoration().createGround(batch, Position.BLOCK_ZERO.offset(0, -1, 0), scale * board.getDimensionX(), scale * board.getDimensionY(), GROUND_DEPTH);
-
-//        for (int y = 0; y < board.getDimensionY(); y++) {
-//
-//        }
 
         for (int x = 0; x < board.getDimensionX(); x++) {
             theme.wallDecoration().createBottomHorizontalWall(batch, Position.BLOCK_ZERO.offset(x*scale, 0, 0));
@@ -53,5 +50,4 @@ public final class MazeBuilder {
 
         batch.apply(world, origin);
     }
-
 }

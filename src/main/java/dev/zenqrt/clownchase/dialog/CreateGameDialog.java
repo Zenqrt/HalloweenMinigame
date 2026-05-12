@@ -74,9 +74,9 @@ public final class CreateGameDialog {
             boolean shouldJoin = Boolean.TRUE.equals(response.getBoolean(JOIN_ON_CREATE_KEY));  // intellij really wanted me to do this
 
             ClownChaseMap map = mapOptional.get();
-            int gameTime = parseIntField("Game time", response.getText(GAME_TIME_KEY));
-            int minPlayers = parseIntField("Minimum players", response.getText(MIN_PLAYERS_KEY));
-            int maxPlayers = parseIntField("Maximum players", response.getText(MAX_PLAYERS_KEY));
+            int gameTime = DialogHelper.parseIntField("Game time", response.getText(GAME_TIME_KEY));
+            int minPlayers = DialogHelper.parseIntField("Minimum players", response.getText(MIN_PLAYERS_KEY));
+            int maxPlayers = DialogHelper.parseIntField("Maximum players", response.getText(MAX_PLAYERS_KEY));
 
             GameSettings gameSettings = new GameSettings(minPlayers, maxPlayers, gameTime, 6);
 
@@ -95,13 +95,4 @@ public final class CreateGameDialog {
                         );
             }
     }
-
-    private static int parseIntField(String label, String input) {
-        try {
-            return Integer.parseInt(input);
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException(label + " must be an integer (got '" + input + "')");
-        }
-    }
-
 }

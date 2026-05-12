@@ -12,4 +12,12 @@ public final class DialogHelper {
         return DialogAction.customClick(callback, options);
     }
 
+    public static int parseIntField(String label, String input) {
+        try {
+            return Integer.parseInt(input);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException(label + " must be an integer (got '" + input + "')");
+        }
+    }
+
 }
