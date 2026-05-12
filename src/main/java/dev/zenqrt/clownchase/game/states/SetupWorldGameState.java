@@ -23,6 +23,7 @@ public final class SetupWorldGameState extends GameState {
     }
 
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     protected void onStateStart() {
         World world = this.mapManager.createGameWorld(this.game.getId(), this.game.getMap());
 
