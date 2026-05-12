@@ -10,6 +10,7 @@ import dev.zenqrt.clownchase.game.base.GameState;
 import dev.zenqrt.clownchase.item.CustomItem;
 import dev.zenqrt.clownchase.item.items.DamageTrapItem;
 import dev.zenqrt.clownchase.item.items.StunBallItem;
+import dev.zenqrt.clownchase.item.items.WallPlacerItem;
 import dev.zenqrt.clownchase.sidebar.sidebars.ClownChaseSidebar;
 import dev.zenqrt.clownchase.utils.attribute.GameAttributeModifiers;
 import dev.zenqrt.clownchase.utils.text.Messages;
@@ -85,7 +86,8 @@ public final class ChaseGameState extends GameState implements Listener {
 
         this.itemListeners = List.of(
                 new StunBallItem.Listeners(game),
-                new DamageTrapItem.Listeners(game, this)
+                new DamageTrapItem.Listeners(game, this),
+                new WallPlacerItem.Listeners(game)
         );
     }
 

@@ -12,7 +12,8 @@ public enum CandyType {
     REGEN(1, RegenCandy::new),
     SHIELD(2, ShieldCandy::new),
     STUN_BALL(2, level -> new ItemCandy(level, CustomItems.STUN_BALL)),
-    DAMAGE_TRAP(2, level -> new ItemCandy(level, CustomItems.DAMAGE_TRAP))
+    DAMAGE_TRAP(1, level -> new ItemCandy(level, CustomItems.DAMAGE_TRAP)),
+    WALL_PLACER(1, level -> new ItemCandy(level, CustomItems.WALL_PLACER))
     ;
 
     private final Function<Level, Candy> factory;
