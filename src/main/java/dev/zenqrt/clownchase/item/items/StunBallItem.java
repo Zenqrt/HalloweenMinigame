@@ -7,6 +7,8 @@ import dev.zenqrt.clownchase.game.GamePlayerData;
 import dev.zenqrt.clownchase.item.CustomItem;
 import dev.zenqrt.clownchase.item.CustomItems;
 import dev.zenqrt.clownchase.utils.text.Messages;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
@@ -30,6 +32,7 @@ public final class StunBallItem extends CustomItem {
     private static final String HIT_NO_SHIELD_SHOOTER = "game.item.stun_ball.hit_no_shield.shooter";
     private static final String HIT_SHIELD_VICTIM = "game.item.stun_ball.hit_shield.victim";
     private static final String HIT_NO_SHIELD_VICTIM = "game.item.stun_ball.hit_no_shield.victim";
+    private static final Sound STUN_SOUND = Sound.sound(Key.key("minecraft:entity.firework_rocket.blast"), Sound.Source.MASTER, 1, 0);
     private static final int STUN_DURATION = 60; // 3 seconds
 
     public StunBallItem() {
@@ -93,6 +96,7 @@ public final class StunBallItem extends CustomItem {
                 createHitParticle()
                         .location(projectile.getLocation())
                         .spawn();
+                hit.getWorld().playSound(STUN_SOUND, hit.getX(), hit.getY(), hit.getZ());
 
                 shooter.sendMessage(Component.translatable(HIT_NO_SHIELD_SHOOTER, NamedTextColor.YELLOW,
                         Messages.username(hit), Messages.seconds(STUN_DURATION / 20)));
