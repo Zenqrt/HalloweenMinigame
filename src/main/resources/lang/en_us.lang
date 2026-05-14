@@ -44,5 +44,7 @@ game.item.damage_trap.hit_shield.victim={0} caught you in their damage trap, but
 game.item.damage_trap.hit_no_shield.victim=You lost {1} from being caught in {0}'s damage trap!
 game.item.damage_trap.hit_shield.self=You caught yourself in your own damage trap, but your shield protected you!
 game.item.damage_trap.hit_no_shield.self=You lost {0} from being caught in your own damage trap!
+game.item.clown_speed.buff_victim={0} gave your clown {1} for {2}!
+game.item.clown_speed.buff_source=You gave {0}s clown {1} for {2}!
 game.clown.self.title=YOUR CLOWN
 server.kick.game_shutdown=The game you were in shut down!

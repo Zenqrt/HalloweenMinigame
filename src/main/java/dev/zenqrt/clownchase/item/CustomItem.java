@@ -22,6 +22,7 @@ public class CustomItem {
     protected final ItemStack baseItem;
     private final String itemId;
 
+    @SuppressWarnings("UnstableApiUsage")
     public CustomItem(String itemId, Material material, String name, ItemRarity rarity) {
         this.itemId = itemId;
         this.baseItem = new ItemStack(material);
@@ -62,7 +63,6 @@ public class CustomItem {
         public void unregister() {
             HandlerList.unregisterAll(this);
         }
-
     }
 
 }

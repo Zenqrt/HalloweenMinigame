@@ -227,7 +227,7 @@ public final class ClownChaseCommand {
     private static int onGameStateNext(CommandSourceStack source, ClownChaseGame game) {
         CommandMessages.sendInfo(source, "Switching to next state...");
 
-        game.getCurrentState().end();
+        game.nextState();
 
         return Command.SINGLE_SUCCESS;
     }

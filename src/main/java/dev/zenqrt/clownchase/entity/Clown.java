@@ -128,4 +128,9 @@ public final class Clown extends Husk {
     public float getVoicePitch() {
         return 1.5F;
     }
+
+
+    public Player getPlayerTarget() {
+        return playerTarget;
+    }
 }
