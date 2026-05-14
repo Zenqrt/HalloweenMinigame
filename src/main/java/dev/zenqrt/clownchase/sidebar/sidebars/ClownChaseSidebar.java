@@ -73,6 +73,12 @@ public final class ClownChaseSidebar extends PacketSidebar {
     }
 
     private static Component clownDistanceText(int distance) {
-        return Component.translatable(GAME_SCOREBOARD_CLOWN_DISTANCE, NamedTextColor.GREEN, Component.text(distance + "m", NamedTextColor.WHITE));
+        Component indicator =
+                distance <= 5 ? Component.text("<5m", NamedTextColor.RED) :
+                        distance <= 15 ? Component.text("<15m", NamedTextColor.GOLD) :
+                                distance <= 30 ? Component.text("<30m", NamedTextColor.YELLOW) :
+                                        Component.text("FAR", NamedTextColor.GRAY);
+
+        return Component.translatable(GAME_SCOREBOARD_CLOWN_DISTANCE, NamedTextColor.GREEN, indicator.decorate(TextDecoration.BOLD));
     }
 }
