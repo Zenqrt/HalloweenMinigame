@@ -14,6 +14,13 @@ This was made using Paper 26.1.2 and Java 25.
 3. Start/restart the server.
 4. That's all! You can set the lobby by doing `/setworldspawn` in your default world and adding maps in the `plugins/ClownChase/maps` folder (command coming soon).
 
+
+## Features
+- Easy-to-customize maze maps using JSON
+- Fast and efficient map generation using NMS chunk modification and manipulating world generation code
+- Customizable game settings such as game time and player limits
+- Fast non-flickering sidebar using scoreboard teams and packets
+
 ## Commands
 `/clownchase autojoin` - Join the next available game
 
