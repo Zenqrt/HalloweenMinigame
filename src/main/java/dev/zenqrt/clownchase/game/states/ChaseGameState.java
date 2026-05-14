@@ -296,16 +296,16 @@ public final class ChaseGameState extends GameState implements Listener {
         private void updatePlayerDisplays() {
             for (ClownChasePlayer gamePlayer : ChaseGameState.this.game.getPlayers().values()) {
                 Player player = gamePlayer.validatePlayer();
+                GamePlayerData playerData = ChaseGameState.this.game.getPlayerData(player.getUniqueId());
 
-                // Clown display
+                // Sidebar display
                 Clown clown = ChaseGameState.this.game.getPlayerToClown().get(player.getUniqueId());
 
                 ClownChaseSidebar sidebar = ChaseGameState.this.sidebarMap.get(player.getUniqueId());
                 sidebar.setClownDistance((int) PositionUtils.distance(player.getLocation(), Position.fine(clown.getX(), clown.getY(), clown.getZ())));
+                sidebar.setYourScore(playerData.getCandyCollected());
 
                 // Shield display
-                GamePlayerData playerData = ChaseGameState.this.game.getPlayerData(player.getUniqueId());
-
                 if (!playerData.isAlive())
                     return;
 

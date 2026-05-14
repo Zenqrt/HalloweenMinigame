@@ -11,6 +11,7 @@ public final class ClownChaseSidebar extends PacketSidebar {
 
     private static final String GAME_SCOREBOARD_TITLE = "game.scoreboard.title";
     private static final String GAME_SCOREBOARD_CLOWN_DISTANCE = "game.scoreboard.clown_distance";
+    private static final String GAME_SCOREBOARD_YOUR_SCORE = "game.scoreboard.your_score";
     private static final String GAME_SCOREBOARD_THIRD_PLACE_SCORE = "game.scoreboard.third_place_score";
     private static final String GAME_SCOREBOARD_SECOND_PLACE_SCORE = "game.scoreboard.second_place_score";
     private static final String GAME_SCOREBOARD_FIRST_PLACE_SCORE = "game.scoreboard.first_place_score";
@@ -21,6 +22,7 @@ public final class ClownChaseSidebar extends PacketSidebar {
         super(Component.translatable(GAME_SCOREBOARD_TITLE, NamedTextColor.YELLOW).decorate(TextDecoration.BOLD));
 
         this.addLine("clown_distance", clownDistanceText(0));
+        this.addLine("your_score", yourScoreText(0));
         this.addEmptyLine();
         this.addLine("third_place_score", thirdPlaceScoreText("...", 0));
         this.addLine("second_place_score", secondPlaceScoreText("...", 0));
@@ -32,6 +34,10 @@ public final class ClownChaseSidebar extends PacketSidebar {
 
     public void setClownDistance(int distance) {
         this.updateLine("clown_distance", clownDistanceText(distance));
+    }
+
+    public void setYourScore(int score) {
+        this.updateLine("your_score", yourScoreText(score));
     }
 
     public void setThirdPlaceScore(String username, int score) {
@@ -60,6 +66,10 @@ public final class ClownChaseSidebar extends PacketSidebar {
 
     private static Component thirdPlaceScoreText(String username, int score) {
        return Component.translatable(GAME_SCOREBOARD_THIRD_PLACE_SCORE, NamedTextColor.WHITE, Component.text(username), Messages.candyText(score));
+    }
+
+    private static Component yourScoreText(int score) {
+        return Component.translatable(GAME_SCOREBOARD_YOUR_SCORE, NamedTextColor.GREEN, Messages.candyText(score));
     }
 
     private static Component clownDistanceText(int distance) {

@@ -11,10 +11,10 @@ public enum CandyType {
     SPEED(3, SpeedCandy::new),
     REGEN(1, RegenCandy::new),
     SHIELD(2, ShieldCandy::new),
-    STUN_BALL(2, level -> new ItemCandy(level, CustomItems.STUN_BALL)),
+    STUN_BALL(1, level -> new ItemCandy(level, CustomItems.STUN_BALL)),
     DAMAGE_TRAP(1, level -> new ItemCandy(level, CustomItems.DAMAGE_TRAP)),
     WALL_PLACER(1, level -> new ItemCandy(level, CustomItems.WALL_PLACER)),
-    CLOWN_SPEED(10000, level -> new ItemCandy(level, CustomItems.CLOWN_SPEED))
+    CLOWN_SPEED(1, level -> new ItemCandy(level, CustomItems.CLOWN_SPEED))
     ;
 
     private final Function<Level, Candy> factory;
