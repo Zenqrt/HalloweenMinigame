@@ -303,7 +303,6 @@ public final class ChaseGameState extends GameState implements Listener {
 
                 ClownChaseSidebar sidebar = ChaseGameState.this.sidebarMap.get(player.getUniqueId());
                 sidebar.setClownDistance((int) PositionUtils.distance(player.getLocation(), Position.fine(clown.getX(), clown.getY(), clown.getZ())));
-                sidebar.setYourScore(playerData.getCandyCollected());
 
                 // Shield display
                 if (!playerData.isAlive())
@@ -366,6 +365,10 @@ public final class ChaseGameState extends GameState implements Listener {
                         .map(entity -> (Candy) ((CraftEntity) entity).getHandle())
                         .forEach(candy -> {
                             consumeCandy(candy, player, playerData);
+
+                            ClownChaseSidebar sidebar = sidebarMap.get(gamePlayer.getUniqueId());
+                            sidebar.setYourScore(playerData.getCandyCollected());
+
                             updateCandyLeaderboard();
                         });
             }
