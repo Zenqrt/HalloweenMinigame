@@ -16,10 +16,14 @@ This was made using Paper 26.1.2 and Java 25.
 
 
 ## Features
-- Easy-to-customize maze maps using JSON
-- Fast and efficient map generation using NMS chunk modification and manipulating world generation code
-- Customizable game settings such as game time and player limits
-- Fast non-flickering sidebar using scoreboard teams and packets
+- Procedurally generated maze arenas
+- Optimized map generation using NMS chunk modification and world generation
+- Multiple candy types with unique gameplay effects
+- Custom items such as a stun ball that stuns players and a damage trap that damages players when stepped on
+- JSON-configurable map generation system
+- Dynamic sidebar displaying player stats and game info such as candy count and the leaderboard
+- Customizable game settings such as game time, player limits, and map selection
+- Temporary world creation and cleanup
 
 ## Commands
 `/clownchase autojoin` - Join the next available game

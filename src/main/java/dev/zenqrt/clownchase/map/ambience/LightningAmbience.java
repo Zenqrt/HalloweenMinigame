@@ -5,6 +5,7 @@ import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.ClownChasePlayer;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.phys.Vec3;
@@ -58,5 +59,7 @@ public final class LightningAmbience implements Ambience {
             );
             nmsPlayer.connection.send(addEntityPacket);
         }
+
+        lightningBolt.remove(Entity.RemovalReason.DISCARDED);
     }
 }
