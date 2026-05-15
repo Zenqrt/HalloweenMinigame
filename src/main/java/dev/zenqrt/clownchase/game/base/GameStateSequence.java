@@ -17,8 +17,11 @@ public class GameStateSequence extends GameState {
         this.states.get(this.stateIndex).end();
     }
 
+    protected void onLastStateEnd() {}
+
     public final void nextState() {
         if (this.stateIndex + 1 >= this.states.size()) {
+            onLastStateEnd();
             this.end();
             return;
         }

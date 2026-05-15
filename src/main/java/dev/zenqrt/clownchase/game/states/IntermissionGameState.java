@@ -30,6 +30,11 @@ public final class IntermissionGameState extends GameStateSequence implements Li
     }
 
     @Override
+    protected void onLastStateEnd() {
+        this.game.nextState();
+    }
+
+    @Override
     protected void onStateStart() {
         Bukkit.getPluginManager().registerEvents(this, this.game.getPlugin());
         super.onStateStart();
@@ -39,7 +44,6 @@ public final class IntermissionGameState extends GameStateSequence implements Li
     protected void onStateEnd() {
         HandlerList.unregisterAll(this);
         super.onStateEnd();
-        this.game.nextState();
     }
 
     @EventHandler

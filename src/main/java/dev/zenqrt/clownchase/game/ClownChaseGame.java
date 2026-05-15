@@ -69,6 +69,7 @@ public final class ClownChaseGame extends GameStateSequence implements Listener 
         this.states = List.of(
                 new SetupWorldGameState(this, mapManager, new RecursiveDivisionStrategy(), MAZE_SCALE),
                 new IntermissionGameState(this),
+                new EnsureWorldReadyGameState(this),
                 new SetupPlayersGameState(this),
                 new SpawnClownsGameState(this),
                 new FreezeCountdownGameState(this),
@@ -270,6 +271,10 @@ public final class ClownChaseGame extends GameStateSequence implements Listener 
 
     public void setWorldReady(boolean worldReady) {
         this.worldReady = worldReady;
+    }
+
+    public boolean isWorldReady() {
+        return worldReady;
     }
 
     public GameSettings getGameSettings() {
