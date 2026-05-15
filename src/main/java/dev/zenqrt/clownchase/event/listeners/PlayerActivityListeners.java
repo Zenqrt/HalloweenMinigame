@@ -34,7 +34,7 @@ public final class PlayerActivityListeners implements Listener {
     @EventHandler
     @SuppressWarnings("UnstableApiUsage")
     public void onSpawn(AsyncPlayerSpawnLocationEvent event) {
-        event.setSpawnLocation(lobbyManager.getLobbySpawn());
+        event.setSpawnLocation(lobbyManager.lobbySpawn());
     }
 
     @EventHandler

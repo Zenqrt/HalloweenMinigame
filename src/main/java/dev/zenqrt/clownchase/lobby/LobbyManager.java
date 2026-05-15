@@ -6,13 +6,7 @@ import org.bukkit.entity.Player;
 
 import java.util.concurrent.CompletableFuture;
 
-public final class LobbyManager {
-
-    private final Location lobbySpawn;
-
-    public LobbyManager(Location lobbySpawn) {
-        this.lobbySpawn = lobbySpawn;
-    }
+public record LobbyManager(Location lobbySpawn) {
 
     public CompletableFuture<Boolean> sendToLobby(Player player) {
         setupLobbyPlayer(player);
@@ -26,9 +20,5 @@ public final class LobbyManager {
         player.setFoodLevel(20);
         player.getInventory().clear();
         player.clearActivePotionEffects();
-    }
-
-    public Location getLobbySpawn() {
-        return lobbySpawn;
     }
 }

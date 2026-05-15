@@ -28,7 +28,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -101,18 +100,14 @@ public final class ClownChaseGame extends GameStateSequence implements Listener 
     }
 
     private void tryDeleteGameWorld() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                try {
-                    ClownChaseGame.this.mapManager.deleteGameWorld(gameId, gameWorld);
-                    this.cancel();
-                } catch (RuntimeException ex) {
-                    ClownChaseGame.this.plugin.getSLF4JLogger().error("Failed to delete game world '{}': {}\nRetrying...", gameWorld.getName(), ex.getMessage());
-                }
-
+        Bukkit.getScheduler().runTaskTimer(this.plugin, task -> {
+            try {
+                ClownChaseGame.this.mapManager.deleteGameWorld(gameId, gameWorld);
+                task.cancel();
+            } catch (RuntimeException ex) {
+                ClownChaseGame.this.plugin.getSLF4JLogger().error("Failed to delete game world '{}': {}\nRetrying...", gameWorld.getName(), ex.getMessage());
             }
-        }.runTaskTimer(this.plugin, 20, 40);
+        }, 20, 40);
     }
 
     @EventHandler
@@ -158,14 +153,12 @@ public final class ClownChaseGame extends GameStateSequence implements Listener 
         Bukkit.getPluginManager().callEvent(joinEvent);
     }
 
-    public boolean removePlayer(ClownChasePlayer gamePlayer) {
+    public void removePlayer(ClownChasePlayer gamePlayer) {
         this.players.remove(gamePlayer.getUniqueId(), gamePlayer);
         this.playerData.remove(gamePlayer.getUniqueId());
 
         GamePlayerQuitEvent quitEvent = new GamePlayerQuitEvent(gamePlayer, this);
         Bukkit.getPluginManager().callEvent(quitEvent);
-
-        return true;
     }
 
     public boolean canPlayerJoin() {
