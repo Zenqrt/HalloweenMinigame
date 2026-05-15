@@ -23,27 +23,8 @@ public final class SetupPlayersGameState extends GameState {
     }
 
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     protected void onStateStart() {
-
-
-        // FIXME: This should work but it doesn't because of the weird way the maze build was generated.
-        // FIXME: To fix this, I have to redo MazeBuilder but I can't be bothered right now so I'll just use the legacy code for finding valid spawns
-//        List<BlockPosition> openCells = new ArrayList<>();
-//
-//        for (int y = 0; y < this.game.getBoard().getDimensionY(); y++){
-//            for (int x = 0; x < this.game.getBoard().getDimensionX(); x++) {
-//                if (this.game.getBoard().getBlock(x, y) == 0)
-//                    openCells.add(Position.block(x*6, 42, y*6));
-//            }
-//        }
-//
-//        for (ClownChasePlayer gamePlayer : game.getPlayers().values()) {
-//            BlockPosition position = openCells.get(ThreadLocalRandom.current().nextInt(openCells.size()));
-//            Player player = gamePlayer.validatePlayer();
-//
-//            player.teleport(position.offset(0.5, 0, 0.5).toLocation(game.getGameWorld()), PlayerTeleportEvent.TeleportCause.PLUGIN);
-//        }
-
         // ----- LEGACY IMPL -----
         for (ClownChasePlayer gamePlayer : game.getPlayers().values()) {
             Player player = gamePlayer.validatePlayer();
