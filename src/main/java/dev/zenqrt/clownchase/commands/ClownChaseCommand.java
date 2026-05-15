@@ -8,13 +8,13 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import dev.zenqrt.clownchase.ClownChasePlugin;
 import dev.zenqrt.clownchase.dialog.CreateGameDialog;
 import dev.zenqrt.clownchase.exceptions.SimplePaperCommandExceptionType;
 import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.ClownChasePlayer;
 import dev.zenqrt.clownchase.game.GameManager;
 import dev.zenqrt.clownchase.game.GameSettings;
+import dev.zenqrt.clownchase.lobby.LobbyManager;
 import dev.zenqrt.clownchase.map.ClownChaseMap;
 import dev.zenqrt.clownchase.map.MapManager;
 import dev.zenqrt.clownchase.utils.text.CommandMessages;
@@ -24,9 +24,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
@@ -40,11 +38,11 @@ public final class ClownChaseCommand {
     private static final SimplePaperCommandExceptionType NOT_IN_GAME = new SimplePaperCommandExceptionType(Component.text("You are not in a game!"));
     private static final SimplePaperCommandExceptionType ALREADY_IN_GAME = new SimplePaperCommandExceptionType(Component.text("You are already in a game!"));
 
-    public static void register(Commands commands, ClownChasePlugin plugin, GameManager gameManager, MapManager mapManager) {
+    public static void register(Commands commands, GameManager gameManager, MapManager mapManager, LobbyManager lobbyManager) {
         commands.register(
                 Commands.literal("clownchase")
                         .then(Commands.literal("lobby")
-                                .executes(context -> onLobby(context.getSource(), plugin.getLobbySpawn(), tryGetGamePlayer(context.getSource(), gameManager), gameManager)))
+                                .executes(context -> onLobby(context.getSource(), tryGetGamePlayer(context.getSource(), gameManager), gameManager, lobbyManager)))
                         .then(Commands.literal("autojoin")
                                 .executes(context -> onGameAutoJoin(context.getSource(), tryGetGamePlayer(context.getSource(), gameManager), gameManager)))
                         .then(Commands.literal("game").requires(source -> source.getSender().isOp())
@@ -266,13 +264,13 @@ public final class ClownChaseCommand {
         return CommandMessages.sendSuccess(source, "Done!");
     }
 
-    private static int onLobby(CommandSourceStack source, Location lobbySpawn, ClownChasePlayer gamePlayer, GameManager gameManager) {
+    private static int onLobby(CommandSourceStack source, ClownChasePlayer gamePlayer, GameManager gameManager, LobbyManager lobbyManager) {
         assert source.getExecutor() instanceof Player;
 
         if (gamePlayer.getGame() != null)
             gameManager.leaveGame(gamePlayer, gamePlayer.getGame());
 
-        source.getExecutor().teleportAsync(lobbySpawn, PlayerTeleportEvent.TeleportCause.COMMAND);
+        lobbyManager.sendToLobby((Player) source.getExecutor());
 
         return Command.SINGLE_SUCCESS;
     }

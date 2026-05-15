@@ -7,6 +7,7 @@ import dev.zenqrt.clownchase.event.listeners.GameWorldListeners;
 import dev.zenqrt.clownchase.event.listeners.GameplayListeners;
 import dev.zenqrt.clownchase.event.listeners.PlayerActivityListeners;
 import dev.zenqrt.clownchase.game.GameManager;
+import dev.zenqrt.clownchase.lobby.LobbyManager;
 import dev.zenqrt.clownchase.map.MapManager;
 import dev.zenqrt.clownchase.utils.player.PlayerUtils;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -14,7 +15,6 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationStore;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -33,17 +33,19 @@ public final class ClownChasePlugin extends JavaPlugin {
     public void onEnable() {
         registerTranslations(ClownChasePlugin.class.getClassLoader().getResourceAsStream("lang/en_us.lang"));
 
+        LobbyManager lobbyManager = new LobbyManager(getServer().getRespawnWorld().getSpawnLocation().toCenterLocation());
+
         mapManager = new MapManager(this, getGameMapsDirectory());
         mapManager.loadMaps();
 
-        GameManager gameManager = new GameManager(this, mapManager);
+        GameManager gameManager = new GameManager(this, mapManager, lobbyManager);
 
-        Bukkit.getPluginManager().registerEvents(new PlayerActivityListeners(this, gameManager), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerActivityListeners(this, gameManager, lobbyManager), this);
         Bukkit.getPluginManager().registerEvents(new GameplayListeners(), this);
         Bukkit.getPluginManager().registerEvents(new GameWorldListeners(mapManager), this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-            ClownChaseCommand.register(commands.registrar(), this, gameManager, mapManager);
+            ClownChaseCommand.register(commands.registrar(), gameManager, mapManager, lobbyManager);
             MazeCommand.register(commands.registrar());
             GlowCommand.register(commands.registrar());
         });
@@ -53,10 +55,6 @@ public final class ClownChasePlugin extends JavaPlugin {
     public void onDisable() {
         Bukkit.getOnlinePlayers().forEach(player -> PlayerUtils.forceRemove(player, EntityRemoveEvent.Cause.UNLOAD));
         mapManager.deleteAllGameWorlds();
-    }
-
-    public Location getLobbySpawn() {
-        return getServer().getRespawnWorld().getSpawnLocation().toCenterLocation();
     }
 
     public Path getGameMapsDirectory() {

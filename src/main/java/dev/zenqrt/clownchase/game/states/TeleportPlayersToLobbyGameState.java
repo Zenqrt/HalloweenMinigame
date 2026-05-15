@@ -4,9 +4,7 @@ import dev.zenqrt.clownchase.game.ClownChaseGame;
 import dev.zenqrt.clownchase.game.ClownChasePlayer;
 import dev.zenqrt.clownchase.game.GameManager;
 import dev.zenqrt.clownchase.game.base.GameState;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
+import dev.zenqrt.clownchase.lobby.LobbyManager;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
@@ -15,30 +13,24 @@ import java.util.List;
 public final class TeleportPlayersToLobbyGameState extends GameState {
 
     private final List<ClownChasePlayer> playersTeleported = new ArrayList<>();
-    private final Location lobbySpawn;
+    private final LobbyManager lobbyManager;
     private final GameManager gameManager;
     private final ClownChaseGame game;
 
-    public TeleportPlayersToLobbyGameState(ClownChaseGame game, GameManager gameManager, Location lobbySpawn) {
+    public TeleportPlayersToLobbyGameState(ClownChaseGame game, GameManager gameManager, LobbyManager lobbyManager) {
         this.game = game;
         this.gameManager = gameManager;
-        this.lobbySpawn = lobbySpawn;
+        this.lobbyManager = lobbyManager;
     }
 
     @Override
     protected void onStateStart() {
         final int playerSize = this.game.getPlayers().size();
 
-        this.game.getPlayers().forEach((_, gamePlayer) -> {
-            Player player = gamePlayer.validatePlayer();
-
-            player.setGameMode(GameMode.ADVENTURE);
-            player.getInventory().clear();
-            player.clearActivePotionEffects();
-
-            player.teleportAsync(lobbySpawn)
-                    .thenRunAsync(() -> playersTeleported.add(gamePlayer));
-        });
+        this.game.getPlayers().forEach(
+                (_, gamePlayer) ->
+                        this.lobbyManager.sendToLobby(gamePlayer.validatePlayer())
+                                .thenRunAsync(() -> playersTeleported.add(gamePlayer)));
 
         new TeleportCheckTask(playerSize, 200)
                 .runTaskTimer(this.game.getPlugin(), 0, 20);

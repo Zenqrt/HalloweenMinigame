@@ -3,6 +3,7 @@ package dev.zenqrt.clownchase.event.listeners;
 import dev.zenqrt.clownchase.ClownChasePlugin;
 import dev.zenqrt.clownchase.game.ClownChasePlayer;
 import dev.zenqrt.clownchase.game.GameManager;
+import dev.zenqrt.clownchase.lobby.LobbyManager;
 import io.papermc.paper.event.player.AsyncPlayerSpawnLocationEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -15,12 +16,14 @@ import java.util.UUID;
 
 public final class PlayerActivityListeners implements Listener {
 
+    private final LobbyManager lobbyManager;
     private final GameManager gameManager;
     private final ClownChasePlugin plugin;
 
-    public PlayerActivityListeners(ClownChasePlugin plugin, GameManager gameManager) {
+    public PlayerActivityListeners(ClownChasePlugin plugin, GameManager gameManager, LobbyManager lobbyManager) {
         this.plugin = plugin;
         this.gameManager = gameManager;
+        this.lobbyManager = lobbyManager;
     }
 
     @EventHandler
@@ -29,8 +32,9 @@ public final class PlayerActivityListeners implements Listener {
     }
 
     @EventHandler
+    @SuppressWarnings("UnstableApiUsage")
     public void onSpawn(AsyncPlayerSpawnLocationEvent event) {
-        event.setSpawnLocation(this.plugin.getLobbySpawn());
+        event.setSpawnLocation(lobbyManager.getLobbySpawn());
     }
 
     @EventHandler
@@ -41,9 +45,12 @@ public final class PlayerActivityListeners implements Listener {
                 gamePlayer -> {
                     gamePlayer.setPlayer(event.getPlayer());
 
-                    if (gamePlayer.getGame() != null)
+                    if (gamePlayer.getGame() != null) {
                         Bukkit.getScheduler().runTask(this.plugin, () -> gamePlayer.getGame().addPlayer(gamePlayer));
+                        return;
+                    }
 
+                    this.lobbyManager.setupLobbyPlayer(event.getPlayer());
                 },
                 () -> event.getPlayer().kick()
         );

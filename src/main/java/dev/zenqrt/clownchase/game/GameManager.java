@@ -1,10 +1,9 @@
 package dev.zenqrt.clownchase.game;
 
 import dev.zenqrt.clownchase.ClownChasePlugin;
+import dev.zenqrt.clownchase.lobby.LobbyManager;
 import dev.zenqrt.clownchase.map.ClownChaseMap;
 import dev.zenqrt.clownchase.map.MapManager;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,18 +14,20 @@ public final class GameManager {
     private final Map<Integer, ClownChaseGame> games = new HashMap<>();
     private final AtomicInteger nextGameId;
     private final MapManager mapManager;
+    private final LobbyManager lobbyManager;
     private final ClownChasePlugin plugin;
 
-    public GameManager(ClownChasePlugin plugin, MapManager mapManager) {
+    public GameManager(ClownChasePlugin plugin, MapManager mapManager, LobbyManager lobbyManager) {
         this.plugin = plugin;
         this.mapManager = mapManager;
+        this.lobbyManager = lobbyManager;
         this.nextGameId = new AtomicInteger(0);
     }
 
     public ClownChaseGame createGame(ClownChaseMap map, GameSettings settings) {
         int gameId = nextGameId.incrementAndGet();
 
-        ClownChaseGame game = new ClownChaseGame(gameId, this, this.mapManager, map, this.plugin, settings);
+        ClownChaseGame game = new ClownChaseGame(gameId, this, this.mapManager, map, lobbyManager, this.plugin, settings);
         games.put(gameId, game);
 
         return game;
@@ -63,13 +64,6 @@ public final class GameManager {
     public ClownChasePlayer addPlayer(UUID uuid) {
         ClownChasePlayer gamePlayer = new ClownChasePlayer(uuid);
         players.put(gamePlayer.getUniqueId(), gamePlayer);
-
-        return gamePlayer;
-    }
-
-    public ClownChasePlayer addPlayer(@NotNull Player player) {
-        ClownChasePlayer gamePlayer = new ClownChasePlayer(player);
-        players.put(player.getUniqueId(), gamePlayer);
 
         return gamePlayer;
     }

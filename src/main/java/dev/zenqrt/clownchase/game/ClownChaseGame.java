@@ -6,6 +6,7 @@ import dev.zenqrt.clownchase.event.events.GamePlayerJoinEvent;
 import dev.zenqrt.clownchase.event.events.GamePlayerQuitEvent;
 import dev.zenqrt.clownchase.game.base.GameStateSequence;
 import dev.zenqrt.clownchase.game.states.*;
+import dev.zenqrt.clownchase.lobby.LobbyManager;
 import dev.zenqrt.clownchase.map.ClownChaseMap;
 import dev.zenqrt.clownchase.map.MapManager;
 import dev.zenqrt.clownchase.maze.MazeBoard;
@@ -56,7 +57,7 @@ public final class ClownChaseGame extends GameStateSequence implements Listener 
     private final GameManager gameManager;
     private final int gameId;
 
-    public ClownChaseGame(int gameId, GameManager gameManager, MapManager mapManager, ClownChaseMap map, ClownChasePlugin plugin, GameSettings gameSettings) {
+    public ClownChaseGame(int gameId, GameManager gameManager, MapManager mapManager, ClownChaseMap map, LobbyManager lobbyManager, ClownChasePlugin plugin, GameSettings gameSettings) {
         this.gameId = gameId;
         this.gameManager = gameManager;
         this.mapManager = mapManager;
@@ -73,7 +74,7 @@ public final class ClownChaseGame extends GameStateSequence implements Listener 
                 new FreezeCountdownGameState(this),
                 new ChaseGameState(this),
                 new AnnounceWinnerGameState(this, 200), // 10 seconds
-                new TeleportPlayersToLobbyGameState(this, gameManager, plugin.getLobbySpawn())
+                new TeleportPlayersToLobbyGameState(this, gameManager, lobbyManager)
         );
     }
 
