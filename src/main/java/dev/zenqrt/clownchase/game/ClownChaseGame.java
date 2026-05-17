@@ -102,10 +102,10 @@ public final class ClownChaseGame extends GameStateSequence implements Listener 
     private void tryDeleteGameWorld() {
         Bukkit.getScheduler().runTaskTimer(this.plugin, task -> {
             try {
-                ClownChaseGame.this.mapManager.deleteGameWorld(gameId, gameWorld);
+                this.mapManager.deleteGameWorld(gameId, gameWorld);
                 task.cancel();
             } catch (RuntimeException ex) {
-                ClownChaseGame.this.plugin.getSLF4JLogger().error("Failed to delete game world '{}': {}\nRetrying...", gameWorld.getName(), ex.getMessage());
+                this.plugin.getSLF4JLogger().error("Failed to delete game world '{}': {}\nRetrying...", gameWorld.getName(), ex.getMessage());
             }
         }, 20, 40);
     }
